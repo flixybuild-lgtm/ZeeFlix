@@ -1,0 +1,23 @@
+{
+  "captured": 16,
+  "failed": 0,
+  "failures": [],
+  "names": [
+    "home-desktop",
+    "player-desktop",
+    "providers-desktop",
+    "search-desktop",
+    "about-desktop",
+    "detail-desktop",
+    "categories-desktop",
+    "install-desktop",
+    "home-mobile",
+    "player-mobile",
+    "detail-mobile",
+    "providers-mobile",
+    "search-mobile",
+    "downloads-mobile",
+    "settings-mobile",
+    "install-mobile"
+  ]
+}
