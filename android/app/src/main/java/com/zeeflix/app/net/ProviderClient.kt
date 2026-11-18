@@ -3,12 +3,14 @@ package com.zeeflix.app.net
 import android.content.Context
 import com.zeeflix.app.model.Film
 import com.zeeflix.app.model.PeerVariant
+import com.zeeflix.app.model.PlaybackFallback
 import com.zeeflix.app.model.ProbeResult
 import com.zeeflix.app.model.ResolvedStream
 import com.zeeflix.app.model.SourceValidator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -29,7 +31,7 @@ object ProviderClient {
                     )
                 )
             )
-            "peer" -> fetchPeerStream(film.source, film.download)
+            "peer" -> resolvePeerStream(film)
             "hls", "dash", "embed" -> {
                 require(SourceValidator.isSafeSource(film.source)) { "Unsafe media source." }
                 ResolvedStream(mode = film.format, streamUrl = film.source)
@@ -52,6 +54,18 @@ object ProviderClient {
             }
         }
     }
+
+    /**
+     * Resolves a PeerTube title, falling back to the bundled direct rendition when the
+     * provider index is unreachable. Only a connectivity failure triggers the fallback;
+     * an explicit "not published" answer from the provider is always honoured.
+     */
+    private fun resolvePeerStream(film: Film): ResolvedStream =
+        try {
+            fetchPeerStream(film.source, film.download)
+        } catch (io: IOException) {
+            PlaybackFallback.directStreamFor(film) ?: throw io
+        }
 
     private fun fetchPeerStream(videoId: String, allowDownload: Boolean): ResolvedStream {
         val conn = (URL("$BLENDER_ORIGIN/api/v1/videos/$videoId").openConnection() as HttpURLConnection).apply {

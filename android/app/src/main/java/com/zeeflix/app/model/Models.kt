@@ -121,6 +121,10 @@ object SourceValidator {
         "https://video.blender.org/videos/embed/"
     )
 
+    /** Hosts and media paths are matched as ASCII only, mirroring the web platform. */
+    private fun Char.isAsciiAlnum(): Boolean =
+        this in 'a'..'z' || this in 'A'..'Z' || this in '0'..'9'
+
     fun isSafeSource(raw: String): Boolean {
         if (raw.length > 2048 || raw.any { it.isISOControl() || it.isWhitespace() || it in "<>\"'\\" }) {
             return false
@@ -129,20 +133,20 @@ object SourceValidator {
             val file = raw.removePrefix("media/")
             return file.isNotEmpty() &&
                 !file.contains("..") &&
-                file.all { it.isLetterOrDigit() || it in "-_." }
+                file.all { it.isAsciiAlnum() || it in "-_." }
         }
         if (!raw.startsWith("https://")) return false
         val rest = raw.removePrefix("https://")
         val host = rest.split('/', '?', '#').firstOrNull().orEmpty()
         return host.isNotEmpty() &&
             !host.contains('@') &&
-            host.all { it.isLetterOrDigit() || it in "-.:[]" }
+            host.all { it.isAsciiAlnum() || it in "-.:[]" }
     }
 
     fun isSafeEmbed(raw: String): Boolean = EMBED_PREFIXES.any { prefix ->
         if (!raw.startsWith(prefix)) return@any false
         val id = raw.removePrefix(prefix)
-        id.isNotEmpty() && id.all { it.isLetterOrDigit() || it in "-_" }
+        id.isNotEmpty() && id.all { it.isAsciiAlnum() || it in "-_" }
     }
 
     fun validateProvider(
@@ -219,5 +223,34 @@ object CatalogParser {
                 )
             }
             .toList()
+    }
+}
+
+/**
+ * Offline resilience for catalogue titles whose provider index cannot be reached.
+ * The web player keeps a public CC rendition of the spotlight film playable when the
+ * PeerTube discovery API is blocked or offline; the native player mirrors that behaviour.
+ */
+object PlaybackFallback {
+    const val SPOTLIGHT_ID = "steel"
+    private const val SPOTLIGHT_DIRECT_URL =
+        "https://video.blender.org/object-storage/web_videos/8533ea43-4271-4a57-9694-e9d0b35e1aa1-480.mp4"
+
+    /** @return a playable direct stream, or null when no fallback applies. */
+    fun directStreamFor(film: Film): ResolvedStream? {
+        if (film.id != SPOTLIGHT_ID) return null
+        if (!SourceValidator.isSafeSource(SPOTLIGHT_DIRECT_URL)) return null
+        return ResolvedStream(
+            mode = "direct",
+            variants = listOf(
+                PeerVariant(
+                    url = SPOTLIGHT_DIRECT_URL,
+                    label = "Original",
+                    height = 480,
+                    sizeBytes = 0L,
+                    downloadUrl = ""
+                )
+            )
+        )
     }
 }

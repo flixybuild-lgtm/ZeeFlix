@@ -13,6 +13,7 @@ class DetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val binding = ActivityDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.applySystemBarInsets()
 
         val filmId = intent.getStringExtra("film_id").orEmpty()
         val store = LibraryStore.get(this)

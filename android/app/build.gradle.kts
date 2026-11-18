@@ -4,6 +4,7 @@ plugins {
 }
 
 val sharedAssetsDir = layout.buildDirectory.dir("generated/zeeflixAssets")
+val testCatalogDir = layout.buildDirectory.dir("generated/zeeflixTestResources")
 
 val syncZeeFlixAssets by tasks.registering(Copy::class) {
     val webPublic = rootProject.layout.projectDirectory.dir("../public")
@@ -17,6 +18,12 @@ val syncZeeFlixAssets by tasks.registering(Copy::class) {
         into("media")
         include("*.webm", "*.vtt")
     }
+}
+
+// Keeps the local unit tests pinned to the live catalogue without duplicating the file.
+val syncTestCatalog by tasks.registering(Copy::class) {
+    from(rootProject.layout.projectDirectory.dir("../public/catalog.tsv"))
+    into(testCatalogDir)
 }
 
 android {
@@ -60,6 +67,9 @@ android {
         getByName("main") {
             assets.srcDir(sharedAssetsDir)
         }
+        getByName("test") {
+            resources.srcDir(testCatalogDir)
+        }
     }
 
     androidResources {
@@ -72,7 +82,7 @@ android {
 }
 
 tasks.named("preBuild").configure {
-    dependsOn(syncZeeFlixAssets)
+    dependsOn(syncZeeFlixAssets, syncTestCatalog)
 }
 
 dependencies {

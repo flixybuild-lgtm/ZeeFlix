@@ -1,0 +1,76 @@
+name: Build ZeeFlix Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_download_branch:
+        description: "Publish the APK to the ci-apk/latest download branch"
+        type: boolean
+        default: false
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+
+      - name: Run Android unit tests, lint and build the APK
+        working-directory: android
+        run: gradle testDebugUnitTest lintDebug assembleDebug --no-daemon
+
+      - name: Verify the APK (manifest, ABI, signature, alignment)
+        run: |
+          set -euo pipefail
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          test -f "$APK"
+          echo "## APK file"
+          ls -lh "$APK"
+          sha256sum "$APK"
+          BT="$(ls -1 "$ANDROID_HOME"/build-tools | sort -V | tail -1)"
+          echo "## build-tools $BT"
+          "$ANDROID_HOME/build-tools/$BT/aapt2" dump badging "$APK" \
+            | grep -E "^(package|sdkVersion|targetSdkVersion|application-label|launchable-activity|native-code)" \
+            || true
+          echo "## signature"
+          "$ANDROID_HOME/build-tools/$BT/apksigner" verify --print-certs "$APK"
+          echo "## alignment"
+          "$ANDROID_HOME/build-tools/$BT/zipalign" -c 4 "$APK" && echo "zipalign OK"
+
+      - name: Upload ZeeFlix Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZeeFlix-Android-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      # Optional manual publish: gives the owner a plain download URL without keeping a
+      # 45 MB binary in the default branch. Delete the branch when it is no longer needed.
+      - name: Publish APK download branch
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_download_branch
+        run: |
+          set -euo pipefail
+          BRANCH="ci-apk/latest"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p artifacts
+          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/ZeeFlix-1.0.0-debug.apk
+          git checkout -B "$BRANCH"
+          git add artifacts/ZeeFlix-1.0.0-debug.apk
+          git commit -m "CI: publish ZeeFlix debug APK (run ${{ github.run_id }})"
+          git push -f origin "HEAD:refs/heads/$BRANCH"
+          echo "Published to https://github.com/${{ github.repository }}/raw/$BRANCH/artifacts/ZeeFlix-1.0.0-debug.apk"
