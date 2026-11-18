@@ -44,9 +44,8 @@ jobs:
           sha256sum "$APK"
           BT="$(ls -1 "$ANDROID_HOME"/build-tools | sort -V | tail -1)"
           echo "## build-tools $BT"
-          "$ANDROID_HOME/build-tools/$BT/aapt2" dump badging "$APK" \
-            | grep -E "^(package|sdkVersion|targetSdkVersion|application-label|launchable-activity|native-code)" \
-            || true
+          "$ANDROID_HOME/build-tools/$BT/aapt2" dump badging "$APK" > badging.txt
+          grep -E "^(package|sdkVersion|targetSdkVersion|application-label|launchable-activity|native-code)" badging.txt || true
           echo "## signature"
           "$ANDROID_HOME/build-tools/$BT/apksigner" verify --print-certs "$APK"
           echo "## alignment"
