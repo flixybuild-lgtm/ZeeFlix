@@ -56,15 +56,20 @@ jobs:
 
       # Screenshots are a nice-to-have; the APK and release are the deliverable.
       # Each step below is therefore best-effort with an explicit log message.
+      # Must use the repo's pinned Playwright (1.55.1). A bare `npx playwright`
+      # can resolve a different version and install a browser build the pinned
+      # API cannot find ("Executable doesn't exist ... headless_shell-1193").
       - name: Install Chromium for screenshots
         id: chromium
         continue-on-error: true
         run: |
-          set -x
-          npx playwright --version
-          sudo npx playwright install-deps chromium
-          npx playwright install chromium
-          npx playwright install --list
+          set -euo pipefail
+          PW=./node_modules/.bin/playwright
+          "$PW" --version
+          node -p "require('playwright/package.json').version"
+          sudo "$PW" install-deps chromium
+          "$PW" install chromium chromium-headless-shell
+          "$PW" install --list
 
       - name: Build the production web app
         run: npm run build
