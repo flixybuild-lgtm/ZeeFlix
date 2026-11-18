@@ -17,7 +17,8 @@
 ![Size](https://img.shields.io/badge/APK-45_MB-15161a?style=flat-square)
 ![No tracking](https://img.shields.io/badge/trackers-0-6bdbab?style=flat-square)
 ![No ads](https://img.shields.io/badge/ads-none-6bdbab?style=flat-square)
-![License](https://img.shields.io/badge/films-Creative_Commons-9c9c9c?style=flat-square)
+![License](https://img.shields.io/badge/code-MIT-6bdbab?style=flat-square)
+![Films](https://img.shields.io/badge/films-Creative_Commons-9c9c9c?style=flat-square)
 
 **No account. No ads. No subscriptions. No trackers. Just films.**
 
@@ -33,8 +34,19 @@
 | **Nothing to install** | **[Open the web app](https://flixybuild-lgtm.github.io/ZeeFlix/)** — works in Chrome, Safari, Firefox, Edge. |
 | **Home-screen app** | Open the web app → browser menu → **Add to Home screen**. |
 | **Full walkthrough** | **[Install guide with screenshots, FAQ & checksums](https://flixybuild-lgtm.github.io/ZeeFlix/install.html)** |
+| **Own domain** | **[Free `.dpdns.org` domain guide](docs/FREE_DOMAIN_SETUP.md)** — DigitalPlat FreeDomain → Cloudflare → GitHub Pages |
 
 > **Verify your download:** every release publishes `SHA256SUMS.txt` next to the APK. Only install builds from this repository's own [Releases](https://github.com/flixybuild-lgtm/ZeeFlix/releases) page.
+
+---
+
+## ▶️ See it move
+
+<div align="center">
+<img src="docs/marketing/demo.gif" alt="ZeeFlix app tour: home spotlight, player controls, film details, providers and downloads" width="320">
+</div>
+
+<sub>Ten seconds through the real app — captured with the same harness that produces every screenshot below.</sub>
 
 ---
 
@@ -141,7 +153,8 @@ Issues and pull requests are welcome — especially device reports (tell me your
 
 1. **Star the repo** ⭐ — it genuinely helps a student project get discovered.
 2. **Report a bug** → [open an issue](https://github.com/flixybuild-lgtm/ZeeFlix/issues)
-3. **Read the audit** → [Android app audit](docs/ANDROID_APP_AUDIT.md) · [test & performance report](docs/TEST_AND_PERFORMANCE_REPORT.md) · [domain & deployment notes](docs/DOMAIN_AND_DEPLOYMENT_REPORT.md)
+3. **Licence** → code is [MIT](LICENSE); films keep their Creative Commons licences.
+4. **Read the audit** → [Android app audit](docs/ANDROID_APP_AUDIT.md) · [test & performance report](docs/TEST_AND_PERFORMANCE_REPORT.md) · [domain & deployment notes](docs/DOMAIN_AND_DEPLOYMENT_REPORT.md)
 
 ---
 

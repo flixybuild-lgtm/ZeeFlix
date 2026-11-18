@@ -24,6 +24,8 @@ Copy-paste launch material. Every image referenced here already exists in
 | Topics | `android` `kotlin` `rust` `wasm` `webassembly` `streaming` `exoplayer` `media3` `pwa` `open-source` `student-project` `video-player` `hls` `dash` `creative-commons` |
 | Social preview | Settings → General → Social preview → upload `docs/marketing/social-card.png` |
 | Pages | Settings → Pages → Source: **GitHub Actions** |
+| Licence | MIT is already committed (`LICENSE`). Films keep their CC licences. |
+| Custom domain | Optional: [FREE_DOMAIN_SETUP.md](FREE_DOMAIN_SETUP.md) (DigitalPlat `.dpdns.org` → Cloudflare → Pages) |
 | Actions | Actions → *Publish ZeeFlix APK & Screenshots* → **Run workflow** (creates the `v1.0.0` release + APK) |
 
 Then check: `install.html` loads, the download button works, and the QR code scans.
@@ -267,12 +269,16 @@ Test karke batao, kis phone pe kya issue aata hai. Aur GitHub pe ⭐ de dena �
 
 ---
 
-## 10. Before a big push, add these two files
+## 10. Before a big push — remaining owner actions
 
-- **`LICENSE`** — the code has none yet, which blocks "awesome list" submissions and makes companies nervous. MIT or Apache-2.0 are the safest picks for a student portfolio project (films keep their own CC licences).
-- **A 10-second demo GIF** — `docs/marketing/demo.gif`, captured with the same Playwright harness, showing the spotlight carousel → player → PiP.
+- **`LICENSE` is now committed (MIT).** That unblocks "awesome list" submissions and makes companies comfortable.
+- **`docs/marketing/demo.gif` is generated** (`npm run demo`) from the real screenshots — attach it to the first tweet/Reddit post, not the static card.
+- **Still needs you, in a browser:** make the repo public, enable Pages, run the publish workflow once. See §1.
+- **Optional but high value:** the free custom domain in [FREE_DOMAIN_SETUP.md](FREE_DOMAIN_SETUP.md).
 
----
+> A 10-second screen recording on a real phone still beats any generated asset.
+> Record the player with PiP + subtitle + speed switching and post it natively
+> (X and Reddit both boost native video over links).
 
 ## 11. Assets cheat-sheet
 
@@ -283,5 +289,6 @@ Test karke batao, kis phone pe kya issue aata hai. Aur GitHub pe ⭐ de dena �
 | `docs/marketing/readme-hero.png` | README top strip |
 | `docs/marketing/screenshot-sheet.png` | one-image overview for articles |
 | `docs/marketing/store-*.png` | 9:16 store-style panels for phone-first posts |
+| `docs/marketing/demo.gif` | 10-second app tour — best first-tweet / Reddit attachment |
 | `docs/screenshots/*-mobile.png` | real device-width captures |
 | `docs/screenshots/*-desktop.png` | real desktop captures |

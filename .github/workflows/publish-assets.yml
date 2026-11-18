@@ -119,6 +119,8 @@ jobs:
           if ls docs/screenshots/*mobile*.png >/dev/null 2>&1; then
             python3 -m pip install --quiet pillow fonttools brotli
             python3 scripts/make_marketing.py
+            python3 scripts/make_demo.py
+            python3 scripts/make_qr.py
           else
             echo "::warning::no mobile captures present; skipping marketing render"
           fi
