@@ -59,17 +59,23 @@ jobs:
       # Must use the repo's pinned Playwright (1.55.1). A bare `npx playwright`
       # can resolve a different version and install a browser build the pinned
       # API cannot find ("Executable doesn't exist ... headless_shell-1193").
+      # Must use the repo's pinned Playwright (1.55.1). A bare `npx playwright`
+      # can resolve a different version and install a browser build the pinned
+      # API cannot find. Every command is best-effort so one hiccup (e.g. an apt
+      # mirror outage during install-deps) cannot prevent the browser install.
       - name: Install Chromium for screenshots
         id: chromium
         continue-on-error: true
         run: |
-          set -euo pipefail
           PW=./node_modules/.bin/playwright
-          "$PW" --version
-          node -p "require('playwright/package.json').version"
-          sudo "$PW" install-deps chromium
-          "$PW" install chromium chromium-headless-shell
-          "$PW" install --list
+          "$PW" --version || true
+          node -p "require('playwright/package.json').version" || true
+          sudo "$PW" install-deps chromium || echo "install-deps failed (non-fatal)"
+          "$PW" install chromium-headless-shell || true
+          "$PW" install chromium || true
+          echo "--- installed browsers ---"
+          "$PW" install --list || true
+          ls ~/.cache/ms-playwright 2>/dev/null || echo "no playwright cache"
 
       - name: Build the production web app
         run: npm run build
