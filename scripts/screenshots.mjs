@@ -83,8 +83,11 @@ await new Promise((resolve, reject) => {
 let browser;
 
 async function launch() {
+  // channel:'chromium' prefers the full Chromium build over headless_shell,
+  // which is what `playwright install chromium` provisions.
   browser = await chromium.launch({
     executablePath: fs.existsSync(CHROMIUM) ? CHROMIUM : undefined,
+    channel: process.env.PW_CHANNEL || undefined,
     args: [
       '--no-sandbox',
       '--disable-dev-shm-usage',
