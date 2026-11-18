@@ -54,20 +54,30 @@ jobs:
       - name: Install Node dependencies
         run: npm ci --ignore-scripts
 
+      # Screenshots are a nice-to-have; the APK and release are the deliverable.
+      # Each step below is therefore best-effort with an explicit log message.
       - name: Install Chromium for screenshots
-        run: npx playwright install --with-deps chromium
+        id: chromium
+        continue-on-error: true
+        run: |
+          set -x
+          npx playwright --version
+          sudo npx playwright install-deps chromium
+          npx playwright install chromium
+          npx playwright install --list
 
       - name: Build the production web app
         run: npm run build
 
       - name: Capture real screenshots
-        run: |
-          # Playwright's --with-deps installs Chromium to ~/.cache/ms-playwright,
-          # which it resolves automatically. CHROMIUM_PATH is only for odd images.
-          node scripts/screenshots.mjs
+        id: screenshots
+        continue-on-error: true
+        run: node scripts/screenshots.mjs
 
       - name: Render marketing images from the screenshots
-        run: python3 -m pip install --quiet pillow && python3 scripts/make_marketing.py
+        if: steps.screenshots.outcome == 'success'
+        continue-on-error: true
+        run: python3 -m pip install --quiet pillow fonttools brotli && python3 scripts/make_marketing.py
 
       - name: Build the Android APK
         working-directory: android
@@ -99,7 +109,7 @@ jobs:
           gh release upload "$TAG" release/*.apk release/SHA256SUMS.txt --clobber
 
       - name: Push screenshots to the artifacts branch
-        if: inputs.publish_screenshots_branch
+        if: inputs.publish_screenshots_branch && steps.screenshots.outcome == 'success'
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
