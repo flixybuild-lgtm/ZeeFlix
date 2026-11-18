@@ -67,15 +67,22 @@ jobs:
         id: chromium
         continue-on-error: true
         run: |
+          mkdir -p test-results
           PW=./node_modules/.bin/playwright
-          "$PW" --version || true
-          node -p "require('playwright/package.json').version" || true
-          sudo "$PW" install-deps chromium || echo "install-deps failed (non-fatal)"
-          "$PW" install chromium-headless-shell || true
-          "$PW" install chromium || true
-          echo "--- installed browsers ---"
-          "$PW" install --list || true
-          ls ~/.cache/ms-playwright 2>/dev/null || echo "no playwright cache"
+          {
+            echo "== versions =="
+            "$PW" --version || true
+            node -p "require('playwright/package.json').version" || true
+            echo "== install-deps =="
+            sudo "$PW" install-deps chromium || echo "install-deps failed (non-fatal)"
+            echo "== install headless shell =="
+            "$PW" install chromium-headless-shell || true
+            echo "== install chromium =="
+            "$PW" install chromium || true
+            echo "== installed browsers =="
+            "$PW" install --list || true
+            ls -la ~/.cache/ms-playwright 2>/dev/null || echo "no playwright cache"
+          } 2>&1 | tee test-results/chromium-install.log
 
       - name: Build the production web app
         run: npm run build
@@ -143,13 +150,25 @@ jobs:
           fi
           gh release upload "$TAG" release/*.apk release/SHA256SUMS.txt --clobber
 
-      - name: Push screenshots to the artifacts branch
-        if: inputs.publish_screenshots_branch && always()
+      - name: Publish screenshots and CI diagnostics to the artifacts branch
+        if: always()
         run: |
           set -euo pipefail
+          BRANCH="ci-artifacts/latest"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -B ci-artifacts/latest
-          git add -f docs/screenshots docs/marketing
-          git commit -m "CI: refresh ZeeFlix screenshots and marketing images (run ${{ github.run_id }})" || echo "no changes"
-          git push -f origin HEAD:refs/heads/ci-artifacts/latest
+          git checkout -B "$BRANCH"
+          mkdir -p ci-diagnostics
+          cp -f test-results/*.log ci-diagnostics/ 2>/dev/null || true
+          cp -f test-results/*.json ci-diagnostics/ 2>/dev/null || true
+          cp -f test-results/*.png ci-diagnostics/ 2>/dev/null || true
+          {
+            echo "run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "commit: $GITHUB_SHA"
+            echo "date: $(date -u +%FT%TZ)"
+            echo "captured screenshots: $(ls docs/screenshots/*.png 2>/dev/null | wc -l)"
+          } > ci-diagnostics/summary.txt
+          git add -f docs/screenshots docs/marketing public/screenshots ci-diagnostics || true
+          git commit -m "CI: artifacts for run $GITHUB_RUN_ID" || echo "nothing to commit"
+          git push -f origin "HEAD:refs/heads/$BRANCH"
+          echo "Diagnostics → $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/tree/$BRANCH/ci-diagnostics"
