@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -52,6 +52,14 @@ jobs:
       - name: Build Production Static Site
         run: npm run build
 
+      - name: Verify the install page and marketing assets shipped
+        run: |
+          test -f dist/install.html
+          test -f dist/install-qr.png
+          test -f dist/screenshots/app-home.webp
+          grep -q "ZeeFlix-latest.apk" dist/install.html
+          echo "install surface OK"
+
       - name: Setup Pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
@@ -85,6 +93,25 @@ jobs:
         with:
           name: ZeeFlix-Android-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      # Publishes the APK to the GitHub Release that lands on the "Download APK"
+      # buttons in the README and on install.html. Skips PRs and forks.
+      - name: Publish APK to the latest GitHub Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          TAG=$(gh release list --limit 50 --json tagName,isLatest --jq '[.[] | select(.isLatest)] | .[0].tagName // empty')
+          if [ -z "$TAG" ]; then
+            echo "No release exists yet — run the 'Publish ZeeFlix APK & Screenshots' workflow once to create one."
+            exit 0
+          fi
+          cp "$APK" ZeeFlix-latest.apk
+          sha256sum ZeeFlix-latest.apk > SHA256SUMS.txt
+          gh release upload "$TAG" ZeeFlix-latest.apk SHA256SUMS.txt --clobber
+          echo "Updated $TAG → https://github.com/${{ github.repository }}/releases/latest/download/ZeeFlix-latest.apk"
 
   deploy:
     if: github.event_name != 'pull_request'

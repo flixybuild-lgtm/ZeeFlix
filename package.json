@@ -1,1 +1,25 @@
-{"name":"zeeflix","version":"1.0.0","private":true,"type":"module","scripts":{"build":"python3 scripts/build.py","dev":"npm run build && python3 scripts/serve.py","start":"python3 scripts/serve.py","test:browser":"node tests/browser.mjs","test:web":"node --test tests/web.test.mjs"},"dependencies":{"hls.js":"1.6.13","dashjs":"5.0.3"},"devDependencies":{"esbuild":"0.25.12","playwright":"1.55.1"}}
+{
+  "name": "zeeflix",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "python3 scripts/build.py",
+    "dev": "npm run build && python3 scripts/serve.py",
+    "start": "python3 scripts/serve.py",
+    "test:browser": "node tests/browser.mjs",
+    "test:web": "node --test tests/web.test.mjs tests/assets.test.mjs",
+    "screenshots": "node scripts/screenshots.mjs",
+    "marketing": "python3 scripts/make_marketing.py",
+    "qr": "python3 scripts/make_qr.py",
+    "assets": "npm run build && npm run screenshots && python3 scripts/make_marketing.py"
+  },
+  "dependencies": {
+    "hls.js": "1.6.13",
+    "dashjs": "5.0.3"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "playwright": "1.55.1"
+  }
+}
