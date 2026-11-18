@@ -22,8 +22,11 @@ permissions:
   contents: write
 
 jobs:
+  # `ubuntu-latest` now resolves to Ubuntu 26.04, which Playwright 1.55.1 does
+  # not support ("Playwright does not support chromium on ubuntu26.04-x64").
+  # Pin to 24.04 so the pinned browser build can be installed.
   publish:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -59,10 +62,9 @@ jobs:
       # Must use the repo's pinned Playwright (1.55.1). A bare `npx playwright`
       # can resolve a different version and install a browser build the pinned
       # API cannot find ("Executable doesn't exist ... headless_shell-1193").
-      # Must use the repo's pinned Playwright (1.55.1). A bare `npx playwright`
-      # can resolve a different version and install a browser build the pinned
-      # API cannot find. Every command is best-effort so one hiccup (e.g. an apt
-      # mirror outage during install-deps) cannot prevent the browser install.
+      # Must use the repo's pinned Playwright (1.55.1) from node_modules, and a
+      # runner whose OS that version supports (Ubuntu 24.04). Every command is
+      # best-effort so a flaky apt mirror cannot block the browser install.
       - name: Install Chromium for screenshots
         id: chromium
         continue-on-error: true
