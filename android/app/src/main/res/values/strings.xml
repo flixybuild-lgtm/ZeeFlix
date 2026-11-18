@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ZeeFlix</string>
+    <string name="tagline">Entertainment Without Limits.</string>
+    <string name="creator_name">Zeeshan Haider</string>
+    <string name="creator_class">9th Class</string>
+    <string name="creator_school">Government High School No. 1</string>
+    <string name="creator_teacher">Teacher: Waqas Ashraf</string>
+    <string name="about_paragraph_1">ZeeFlix is a modern entertainment platform created by Zeeshan Haider, a 9th-class student at Government High School No. 1.</string>
+    <string name="about_paragraph_2">The project focuses on modern technology, fast performance, smooth video playback, and a beautiful entertainment experience.</string>
+</resources>
