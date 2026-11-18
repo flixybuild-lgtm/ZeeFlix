@@ -74,10 +74,34 @@ jobs:
         continue-on-error: true
         run: node scripts/screenshots.mjs
 
+      # Turns the capture report into ::error:: annotations so a failure is
+      # readable from the Checks API without downloading logs.
+      - name: Report screenshot results
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, sys
+          report = pathlib.Path("test-results/screenshots-report.json")
+          if not report.exists():
+              print("::error::screenshots-report.json missing — capture did not run")
+              sys.exit(0)
+          data = json.loads(report.read_text())
+          print(f"captured={data.get('captured')} failed={data.get('failed')}")
+          for item in data.get("failures", []):
+              msg = str(item.get("error", "")).replace("\n", " ")[:400]
+              print(f"::error title=Screenshot {item.get('name')}::{msg}")
+          PY
+
       - name: Render marketing images from the screenshots
-        if: steps.screenshots.outcome == 'success'
+        if: always()
         continue-on-error: true
-        run: python3 -m pip install --quiet pillow fonttools brotli && python3 scripts/make_marketing.py
+        run: |
+          if ls docs/screenshots/*mobile*.png >/dev/null 2>&1; then
+            python3 -m pip install --quiet pillow fonttools brotli
+            python3 scripts/make_marketing.py
+          else
+            echo "::warning::no mobile captures present; skipping marketing render"
+          fi
 
       - name: Build the Android APK
         working-directory: android
@@ -109,7 +133,7 @@ jobs:
           gh release upload "$TAG" release/*.apk release/SHA256SUMS.txt --clobber
 
       - name: Push screenshots to the artifacts branch
-        if: inputs.publish_screenshots_branch && steps.screenshots.outcome == 'success'
+        if: inputs.publish_screenshots_branch && always()
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
