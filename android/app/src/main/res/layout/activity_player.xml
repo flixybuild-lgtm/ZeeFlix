@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#030405"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:id="@+id/playerStage"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.media3.ui.PlayerView
+            android:id="@+id/playerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:show_buffering="when_playing"
+            app:use_controller="true" />
+
+        <WebView
+            android:id="@+id/embedWebView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/playerStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:layout_margin="12dp"
+            android:background="#CC121318"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
+            android:text="Connecting to provider…"
+            android:textColor="@color/zf_text"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:id="@+id/playerTopOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <ImageButton
+                android:id="@+id/btnPlayerBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="#800B0C0F"
+                android:contentDescription="Back"
+                android:src="@drawable/ic_back" />
+
+            <TextView
+                android:id="@+id/playerTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="10dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/zf_text"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/btnPip"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="#800B0C0F"
+                android:contentDescription="Picture in Picture"
+                android:src="@drawable/ic_pip" />
+
+            <ImageButton
+                android:id="@+id/btnFullscreen"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="6dp"
+                android:background="#800B0C0F"
+                android:contentDescription="Fullscreen"
+                android:src="@drawable/ic_fullscreen" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <HorizontalScrollView
+        android:id="@+id/playerOptionsBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/zf_surface"
+        android:padding="10dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnQuality"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:text="Quality"
+                android:textColor="@color/zf_text"
+                android:textSize="12sp"
+                app:strokeColor="@color/zf_glass_stroke" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSpeed"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginStart="8dp"
+                android:text="1.0×"
+                android:textColor="@color/zf_text"
+                android:textSize="12sp"
+                app:strokeColor="@color/zf_glass_stroke" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSubtitles"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginStart="8dp"
+                android:text="Subtitles"
+                android:textColor="@color/zf_text"
+                android:textSize="12sp"
+                app:strokeColor="@color/zf_glass_stroke" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAudioTrack"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginStart="8dp"
+                android:text="Audio"
+                android:textColor="@color/zf_text"
+                android:textSize="12sp"
+                android:visibility="gone"
+                app:strokeColor="@color/zf_glass_stroke" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDownloadMovie"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginStart="8dp"
+                android:text="Download"
+                android:textColor="@color/zf_accent"
+                android:textSize="12sp"
+                android:visibility="gone"
+                app:backgroundTint="#1FF8B74F"
+                app:icon="@drawable/ic_download"
+                app:iconTint="@color/zf_accent" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPrevEpisode"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginStart="8dp"
+                android:text="Prev Ep"
+                android:textColor="@color/zf_text"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNextEpisode"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginStart="8dp"
+                android:text="Next Ep"
+                android:textColor="@color/zf_text"
+                android:textSize="12sp"
+                android:visibility="gone" />
+        </LinearLayout>
+    </HorizontalScrollView>
+</LinearLayout>

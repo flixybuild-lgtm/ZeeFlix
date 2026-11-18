@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ZeeFlix" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/zf_accent</item>
+        <item name="colorOnPrimary">@color/zf_accent_ink</item>
+        <item name="colorSurface">@color/zf_surface</item>
+        <item name="colorOnSurface">@color/zf_text</item>
+        <item name="android:windowBackground">@color/zf_bg</item>
+        <item name="android:statusBarColor">@color/zf_bg</item>
+        <item name="android:navigationBarColor">@color/zf_surface</item>
+    </style>
+
+    <style name="Theme.ZeeFlix.Splash" parent="Theme.ZeeFlix">
+        <item name="android:windowBackground">@color/zf_bg</item>
+    </style>
+
+    <style name="Theme.ZeeFlix.Player" parent="Theme.ZeeFlix">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowBackground">#030405</item>
+    </style>
+</resources>
