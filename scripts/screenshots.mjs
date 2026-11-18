@@ -2,14 +2,16 @@
 /**
  * Captures the ZeeFlix marketing + store screenshot set into docs/screenshots/.
  *
- *   node scripts/screenshots.mjs            # real desktop + mobile web views
+ *   npm run build && node scripts/screenshots.mjs
  *   CHROMIUM_PATH=/tmp/chromium node scripts/screenshots.mjs
  *
  * The script serves dist/ with scripts/serve.py (HTTP range support), drives a
  * headless Chromium through Playwright, and writes deterministic PNGs that the
- * README, the install page and the product-hunt/social previews all reuse.
- * Run `npm run build` first. External media requests are stubbed so the capture
- * never depends on a third-party provider being reachable.
+ * README, the install page and the social previews all reuse. External media
+ * requests are stubbed so the capture never depends on a third-party provider.
+ *
+ * Every shot is independent: one failing route is logged and the run continues,
+ * then a summary is printed. Exit code is non-zero only if nothing was captured.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,7 +21,7 @@ import { chromium } from 'playwright';
 const ROOT = path.resolve(import.meta.dirname, '..');
 const OUT = path.join(ROOT, 'docs/screenshots');
 const PUB = path.join(ROOT, 'dist/screenshots');
-const PORT = 4191;
+const PORT = Number(process.env.PORT || 4191);
 const BASE = `http://127.0.0.1:${PORT}`;
 const CHROMIUM = process.env.CHROMIUM_PATH || '/tmp/chromium';
 
@@ -36,25 +38,54 @@ const server = spawn('python3', ['scripts/serve.py'], {
   stdio: ['ignore', 'pipe', 'pipe'],
 });
 await new Promise((resolve, reject) => {
-  const timer = setTimeout(() => reject(new Error('server did not start')), 12000);
-  server.stdout.on('data', c => {
-    if (c.toString().includes('ZeeFlix preview')) {
+  const timer = setTimeout(() => reject(new Error('server did not start on ' + PORT)), 15000);
+  server.stdout.on('data', chunk => {
+    if (chunk.toString().includes('ZeeFlix preview')) {
       clearTimeout(timer);
       resolve();
     }
   });
+  server.on('exit', code => reject(new Error(`serve.py exited early (${code})`)));
 });
 
-const browser = await chromium.launch({
-  executablePath: fs.existsSync(CHROMIUM) ? CHROMIUM : undefined,
-  args: ['--no-sandbox', '--disable-dev-shm-usage', '--force-color-profile=srgb'],
-  headless: true,
-});
+let browser;
+
+async function launch() {
+  browser = await chromium.launch({
+    executablePath: fs.existsSync(CHROMIUM) ? CHROMIUM : undefined,
+    args: [
+      '--no-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--force-color-profile=srgb',
+      '--autoplay-policy=no-user-gesture-required',
+      '--js-flags=--max-old-space-size=1024',
+    ],
+    headless: true,
+    timeout: 60000,
+  });
+  console.log(`Chromium ${browser.version()}`);
+}
+
+await launch();
+
+/** A crashed renderer must not abort the whole run — relaunch and carry on. */
+async function ensureBrowser() {
+  try {
+    if (!browser.isConnected()) throw new Error('disconnected');
+    const probe = await browser.newPage();
+    await probe.close();
+  } catch {
+    console.log('  ! browser died, relaunching…');
+    await browser.close().catch(() => {});
+    await launch();
+  }
+}
 
 const webm = path.join(ROOT, 'dist/media/sintel.webm');
 const webmSize = fs.statSync(webm).size;
 
-async function newPage(width, height, scale = 2) {
+async function newPage(width, height, scale) {
   const ctx = await browser.newContext({
     viewport: { width, height },
     deviceScaleFactor: scale,
@@ -62,6 +93,7 @@ async function newPage(width, height, scale = 2) {
     reducedMotion: 'reduce',
   });
   const page = await ctx.newPage();
+  page.setDefaultTimeout(20000);
   // Deterministic provider stubs: no external network during capture.
   await page.route('https://video.blender.org/**', async route => {
     const url = route.request().url();
@@ -87,7 +119,7 @@ async function newPage(width, height, scale = 2) {
     return route.fulfill({ status: 204, body: '' });
   });
   await page.route('https://www.youtube-nocookie.com/**', route =>
-    route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><body style="background:#000"></body>' }),
+    route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><body style="background:#000"></body>' })
   );
   return page;
 }
@@ -95,123 +127,195 @@ async function newPage(width, height, scale = 2) {
 async function ready(page) {
   await page.waitForSelector('html[data-ready="true"]');
   await page.evaluate(() => document.fonts.ready);
-  await page.waitForTimeout(450);
+  await page.waitForTimeout(400);
 }
 
-async function shot(page, name, { pub = false } = {}) {
-  await page.waitForTimeout(320);
+async function waitVideo(page) {
+  await page.waitForFunction(() => (document.querySelector('video')?.readyState ?? 0) >= 2);
+}
+
+const captured = [];
+const failed = [];
+
+async function capture(name, page, fn) {
+  try {
+    await ensureBrowser();
+    await fn();
+    captured.push(name);
+    return true;
+  } catch (err) {
+    failed.push({ name, error: err?.message || String(err) });
+    console.log(`  ✗ ${name}: ${(err?.message || err).split('\n')[0]}`);
+    await page.goto(`${BASE}/#home`).catch(() => {});
+    await ready(page).catch(() => {});
+    return false;
+  }
+}
+
+/** Probe the shell once so a broken build fails fast with a useful message. */
+async function assertAppBoots() {
+  const page = await newPage(1280, 800, 1);
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('requestfailed', r => errors.push(`request failed: ${r.url()}`));
+  await page.goto(`${BASE}/#home`);
+  try {
+    await page.waitForSelector('html[data-ready="true"]', { timeout: 25000 });
+  } catch {
+    const state = await page.evaluate(() => ({
+      ready: document.documentElement.dataset.ready || null,
+      hasWasm: typeof WebAssembly === 'object',
+      boot: document.querySelector('.boot-error')?.textContent || null,
+      title: document.title,
+    })).catch(() => ({}));
+    await page.screenshot({ path: path.join(ROOT, 'test-results', 'boot-failure.png') }).catch(() => {});
+    console.log('✗ The app shell did not reach data-ready="true".');
+    console.log('  state:', JSON.stringify(state));
+    if (errors.length) console.log('  page errors:', errors.slice(0, 6).join(' | '));
+    await page.close();
+    await browser.close().catch(() => {});
+    server.kill('SIGTERM');
+    process.exit(2);
+  }
+  await page.close();
+  console.log('App shell boots ✓');
+}
+
+async function write(page, name, { pub = false, settle = 300 } = {}) {
+  await page.waitForTimeout(settle);
   const target = path.join(OUT, `${name}.png`);
   await page.screenshot({ path: target, animations: 'disabled' });
   if (pub) fs.copyFileSync(target, path.join(PUB, `${name}.png`));
-  const kb = Math.round(fs.statSync(target).size / 1024);
-  console.log(`  ✓ ${name}.png (${kb} KB)`);
+  console.log(`  ✓ ${name}.png (${Math.round(fs.statSync(target).size / 1024)} KB)`);
 }
 
-console.log('Capturing desktop…');
+await assertAppBoots();
+
+console.log('Capturing desktop (1280 × 800)…');
 {
   const page = await newPage(1280, 800, 1.5);
-  await page.goto(`${BASE}/#home`);
-  await ready(page);
-  await shot(page, 'home-desktop');
-
-  await page.goto(`${BASE}/#watch/sintel`);
-  await ready(page);
-  await page.waitForFunction(() => document.querySelector('video')?.readyState >= 2);
-  await page.evaluate(() => { const v = document.querySelector('video'); v.currentTime = 168; });
-  await page.waitForTimeout(900);
-  await page.locator('#quality').scrollIntoViewIfNeeded();
-  await shot(page, 'player-desktop');
-
-  await page.goto(`${BASE}/#providers`);
-  await ready(page);
-  await page.locator('[data-probe-id="local"] [data-act="test-provider"]').click();
-  await page.waitForFunction(() => document.querySelector('[data-probe-id="local"] .status')?.textContent?.includes('Connected'), null, { timeout: 15000 }).catch(() => {});
-  await shot(page, 'providers-desktop');
-
-  await page.goto(`${BASE}/#search`);
-  await ready(page);
-  await page.fill('#query', 'steel');
-  await page.waitForSelector('.suggest');
-  await shot(page, 'search-desktop');
-
-  await page.goto(`${BASE}/#about`);
-  await ready(page);
-  await shot(page, 'about-desktop');
-
-  await page.goto(`${BASE}/#title/sintel`);
-  await ready(page);
-  await shot(page, 'detail-desktop', { pub: true });
-
-  await page.goto(`${BASE}/#categories`);
-  await ready(page);
-  await shot(page, 'categories-desktop', { pub: true });
-
-  await page.goto(`${BASE}/install.html`);
-  await ready(page).catch(() => {});
-  await page.waitForTimeout(600);
-  await shot(page, 'install-desktop', { pub: true });
-  await page.setViewportSize({ width: 1280, height: 1600 });
-  await page.evaluate(() => window.scrollTo(0, 560));
-  await shot(page, 'install-steps-desktop', { pub: true });
+  await capture('home-desktop', page, async () => {
+    await page.goto(`${BASE}/#home`);
+    await ready(page);
+    await write(page, 'home-desktop');
+  });
+  await capture('player-desktop', page, async () => {
+    await page.goto(`${BASE}/#watch/sintel`);
+    await ready(page);
+    await waitVideo(page);
+    await page.evaluate(() => { document.querySelector('video').currentTime = 168; });
+    await write(page, 'player-desktop', { settle: 900 });
+  });
+  await capture('providers-desktop', page, async () => {
+    await page.goto(`${BASE}/#providers`);
+    await ready(page);
+    const probe = page.locator('[data-probe-id="local"] [data-act="test-provider"]');
+    if (await probe.count()) await probe.click();
+    await page
+      .waitForFunction(
+        () => document.querySelector('[data-probe-id="local"] .status')?.textContent?.includes('Connected'),
+        null,
+        { timeout: 15000 }
+      )
+      .catch(() => {});
+    await write(page, 'providers-desktop', { settle: 500 });
+  });
+  await capture('search-desktop', page, async () => {
+    await page.goto(`${BASE}/#search`);
+    await ready(page);
+    await page.fill('#query', 'steel');
+    await page.waitForSelector('.suggest');
+    await write(page, 'search-desktop');
+  });
+  await capture('about-desktop', page, async () => {
+    await page.goto(`${BASE}/#about`);
+    await ready(page);
+    await write(page, 'about-desktop');
+  });
+  await capture('detail-desktop', page, async () => {
+    await page.goto(`${BASE}/#title/sintel`);
+    await ready(page);
+    await write(page, 'detail-desktop', { pub: true });
+  });
+  await capture('categories-desktop', page, async () => {
+    await page.goto(`${BASE}/#categories`);
+    await ready(page);
+    await write(page, 'categories-desktop', { pub: true });
+  });
+  await capture('install-desktop', page, async () => {
+    await page.goto(`${BASE}/install.html`);
+    await page.evaluate(() => document.fonts.ready);
+    await write(page, 'install-desktop', { pub: true, settle: 700 });
+    await page.setViewportSize({ width: 1280, height: 1600 });
+    await page.evaluate(() => window.scrollTo(0, 560));
+    await write(page, 'install-steps-desktop', { pub: true, settle: 500 });
+  });
   await page.close();
 }
 
 console.log('Capturing mobile (390 × 844)…');
 {
   const page = await newPage(390, 844, 2);
-  await page.goto(`${BASE}/#home`);
-  await ready(page);
-  await shot(page, 'home-mobile', { pub: true });
-  await page.evaluate(() => window.scrollTo({ top: 700 }));
-  await page.waitForTimeout(400);
-  await shot(page, 'home-mobile-shelves', { pub: true });
-
-  await page.goto(`${BASE}/#watch/sintel`);
-  await ready(page);
-  await page.waitForFunction(() => document.querySelector('video')?.readyState >= 2);
-  await page.evaluate(() => { document.querySelector('video').currentTime = 168; });
-  await page.waitForTimeout(900);
-  await shot(page, 'player-mobile', { pub: true });
-
-  await page.goto(`${BASE}/#title/steel`);
-  await ready(page);
-  await shot(page, 'detail-mobile', { pub: true });
-
-  await page.goto(`${BASE}/#providers`);
-  await ready(page);
-  await shot(page, 'providers-mobile', { pub: true });
-
-  await page.goto(`${BASE}/#search`);
-  await ready(page);
-  await shot(page, 'search-mobile', { pub: true });
-
-  await page.goto(`${BASE}/#downloads`);
-  await ready(page);
-  await shot(page, 'downloads-mobile', { pub: true });
-
-  await page.goto(`${BASE}/#settings`);
-  await ready(page);
-  await shot(page, 'settings-mobile', { pub: true });
-
-  await page.goto(`${BASE}/install.html`);
-  await page.waitForTimeout(900);
-  await shot(page, 'install-mobile', { pub: true });
-  await page.evaluate(() => window.scrollTo(0, 760));
-  await page.waitForTimeout(400);
-  await shot(page, 'install-steps-mobile', { pub: true });
+  await capture('home-mobile', page, async () => {
+    await page.goto(`${BASE}/#home`);
+    await ready(page);
+    await write(page, 'home-mobile', { pub: true });
+    await page.evaluate(() => window.scrollTo({ top: 700 }));
+    await write(page, 'home-mobile-shelves', { pub: true, settle: 450 });
+  });
+  await capture('player-mobile', page, async () => {
+    await page.goto(`${BASE}/#watch/sintel`);
+    await ready(page);
+    await waitVideo(page);
+    await page.evaluate(() => { document.querySelector('video').currentTime = 168; });
+    await write(page, 'player-mobile', { pub: true, settle: 900 });
+  });
+  await capture('detail-mobile', page, async () => {
+    await page.goto(`${BASE}/#title/steel`);
+    await ready(page);
+    await write(page, 'detail-mobile', { pub: true });
+  });
+  await capture('providers-mobile', page, async () => {
+    await page.goto(`${BASE}/#providers`);
+    await ready(page);
+    await write(page, 'providers-mobile', { pub: true });
+  });
+  await capture('search-mobile', page, async () => {
+    await page.goto(`${BASE}/#search`);
+    await ready(page);
+    await write(page, 'search-mobile', { pub: true });
+  });
+  await capture('downloads-mobile', page, async () => {
+    await page.goto(`${BASE}/#downloads`);
+    await ready(page);
+    await write(page, 'downloads-mobile', { pub: true });
+  });
+  await capture('settings-mobile', page, async () => {
+    await page.goto(`${BASE}/#settings`);
+    await ready(page);
+    await write(page, 'settings-mobile', { pub: true });
+  });
+  await capture('install-mobile', page, async () => {
+    await page.goto(`${BASE}/install.html`);
+    await page.evaluate(() => document.fonts.ready);
+    await write(page, 'install-mobile', { pub: true, settle: 800 });
+    await page.evaluate(() => window.scrollTo(0, 760));
+    await write(page, 'install-steps-mobile', { pub: true, settle: 500 });
+  });
   await page.close();
-}
-
-// Install page thumbnails reuse the mobile captures (9:16 crops).
-const thumbs = {
-  'install-mobile-home': 'home-mobile',
-  'install-mobile-player': 'player-mobile',
-  'install-mobile-providers': 'providers-mobile',
-};
-for (const [dst, src] of Object.entries(thumbs)) {
-  fs.copyFileSync(path.join(OUT, `${src}.png`), path.join(PUB, `${dst}.png`));
 }
 
 await browser.close();
 server.kill('SIGTERM');
-console.log(`\nDone. ${fs.readdirSync(OUT).filter(f => f.endsWith('.png')).length} screenshots in docs/screenshots/`);
+
+const summary = { captured: captured.length, failed: failed.length, failures: failed };
+fs.mkdirSync(path.join(ROOT, 'test-results'), { recursive: true });
+fs.writeFileSync(path.join(ROOT, 'test-results/screenshots-report.json'), JSON.stringify(summary, null, 2));
+
+console.log(`\nCaptured ${captured.length} screenshot(s), ${failed.length} failure(s).`);
+if (failed.length) {
+  console.log('Failures:');
+  for (const f of failed) console.log(`  - ${f.name}: ${f.error}`);
+}
+if (!captured.length) process.exit(1);
