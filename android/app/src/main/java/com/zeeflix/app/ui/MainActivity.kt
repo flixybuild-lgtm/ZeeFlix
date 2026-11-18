@@ -17,6 +17,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         applyThemeColors()
+        binding.topBar.applyTopSystemBarInsets()
 
         if (savedInstanceState == null) {
             switchFragment(HomeFragment())

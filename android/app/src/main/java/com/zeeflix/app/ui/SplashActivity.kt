@@ -23,6 +23,7 @@ class SplashActivity : AppCompatActivity() {
         }
         val binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.applySystemBarInsets()
         binding.btnSkipSplash.setOnClickListener { openMain() }
         handler.postDelayed(goHomeRunnable, 1450L)
     }

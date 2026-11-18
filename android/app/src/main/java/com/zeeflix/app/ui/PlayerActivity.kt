@@ -55,6 +55,7 @@ class PlayerActivity : AppCompatActivity() {
     private var variantIndex = 0
     private var isLandscapeLocked = false
     private var speedIndex = 2
+    private var embedMode = false
     private val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,7 +78,17 @@ class PlayerActivity : AppCompatActivity() {
         setupEpisodes()
         setupControls()
         setupGestures()
+        setupSystemBarInsets()
         loadMedia()
+    }
+
+    /**
+     * targetSdk 35 draws edge-to-edge on Android 15+, so the video stage keeps the full
+     * screen while the overlays are pushed clear of the status and navigation bars.
+     */
+    private fun setupSystemBarInsets() {
+        binding.playerTopOverlay.applyTopSystemBarInsets()
+        binding.playerOptionsBar.applyBottomSystemBarInsets()
     }
 
     private fun setupEpisodes() {
@@ -325,6 +336,7 @@ class PlayerActivity : AppCompatActivity() {
             binding.playerStatus.text = "Embed host not allowlisted."
             return
         }
+        embedMode = true
         binding.playerStatus.visibility = View.GONE
         binding.playerView.visibility = View.GONE
         binding.playerOptionsBar.visibility = View.GONE
@@ -354,7 +366,10 @@ class PlayerActivity : AppCompatActivity() {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         val vis = if (isInPictureInPictureMode) View.GONE else View.VISIBLE
         binding.playerTopOverlay.visibility = vis
-        binding.playerOptionsBar.visibility = vis
+        // Embedded players use the provider's own controls; the local options bar must
+        // never reappear over an embed (for example when leaving Picture-in-Picture).
+        val optionsVis = if (isInPictureInPictureMode || embedMode) View.GONE else View.VISIBLE
+        binding.playerOptionsBar.visibility = optionsVis
     }
 
     override fun onPause() {
