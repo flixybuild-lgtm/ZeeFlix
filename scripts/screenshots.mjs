@@ -24,6 +24,37 @@ const PUB = path.join(ROOT, 'dist/screenshots');
 const PORT = Number(process.env.PORT || 4191);
 const BASE = `http://127.0.0.1:${PORT}`;
 const CHROMIUM = process.env.CHROMIUM_PATH || '/tmp/chromium';
+const ON_CI = process.env.GITHUB_ACTIONS === 'true';
+
+/** Emit GitHub Actions annotations so failures are readable from Checks. */
+function annotate(level, title, message) {
+  const text = String(message).replace(/[\r\n]+/g, ' ').slice(0, 900);
+  if (ON_CI) console.log(`::${level} title=${title}::${text}`);
+  console.log(`[${level}] ${title}: ${text}`);
+}
+const step = message => annotate('notice', 'screenshots', message);
+
+// A hard crash anywhere below must still leave a report + annotation behind.
+process.on('uncaughtException', err => fatal(err, 'uncaughtException'));
+process.on('unhandledRejection', err => fatal(err, 'unhandledRejection'));
+
+function fatal(err, kind) {
+  const message = err?.stack || err?.message || String(err);
+  annotate('error', `screenshots ${kind}`, message);
+  try {
+    fs.mkdirSync(path.join(ROOT, 'test-results'), { recursive: true });
+    fs.writeFileSync(
+      path.join(ROOT, 'test-results/screenshots-report.json'),
+      JSON.stringify({
+        captured: 0,
+        failed: 1,
+        fatal: { kind, message: String(message).slice(0, 4000) },
+        failures: [{ name: kind, error: String(message).slice(0, 2000) }],
+      }, null, 2)
+    );
+  } catch { /* best effort */ }
+  process.exit(3);
+}
 
 if (!fs.existsSync(path.join(ROOT, 'dist/index.html'))) {
   console.error('dist/ is missing. Run `npm run build` first.');
@@ -37,6 +68,7 @@ const server = spawn('python3', ['scripts/serve.py'], {
   env: { ...process.env, PORT: String(PORT) },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
+step('starting static server');
 await new Promise((resolve, reject) => {
   const timer = setTimeout(() => reject(new Error('server did not start on ' + PORT)), 15000);
   server.stdout.on('data', chunk => {
@@ -65,6 +97,7 @@ async function launch() {
     timeout: 60000,
   });
   console.log(`Chromium ${browser.version()}`);
+  step(`chromium ${browser.version()} launched`);
 }
 
 await launch();
@@ -180,6 +213,7 @@ async function assertAppBoots() {
   }
   await page.close();
   console.log('App shell boots ✓');
+  step('app shell reached data-ready=true');
 }
 
 async function write(page, name, { pub = false, settle = 300 } = {}) {
@@ -190,6 +224,7 @@ async function write(page, name, { pub = false, settle = 300 } = {}) {
   console.log(`  ✓ ${name}.png (${Math.round(fs.statSync(target).size / 1024)} KB)`);
 }
 
+step('probe: app shell boot');
 await assertAppBoots();
 
 console.log('Capturing desktop (1280 × 800)…');
@@ -309,9 +344,11 @@ console.log('Capturing mobile (390 × 844)…');
 await browser.close();
 server.kill('SIGTERM');
 
-const summary = { captured: captured.length, failed: failed.length, failures: failed };
 fs.mkdirSync(path.join(ROOT, 'test-results'), { recursive: true });
-fs.writeFileSync(path.join(ROOT, 'test-results/screenshots-report.json'), JSON.stringify(summary, null, 2));
+fs.writeFileSync(
+  path.join(ROOT, 'test-results/screenshots-report.json'),
+  JSON.stringify({ captured: captured.length, failed: failed.length, failures: failed, names: captured }, null, 2)
+);
 
 console.log(`\nCaptured ${captured.length} screenshot(s), ${failed.length} failure(s).`);
 if (failed.length) {
