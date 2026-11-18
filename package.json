@@ -12,7 +12,8 @@
     "screenshots": "node scripts/screenshots.mjs",
     "marketing": "python3 scripts/make_marketing.py",
     "qr": "python3 scripts/make_qr.py",
-    "assets": "npm run build && npm run screenshots && python3 scripts/make_marketing.py"
+    "assets": "npm run build && npm run screenshots && python3 scripts/make_marketing.py && python3 scripts/make_demo.py && python3 scripts/make_qr.py",
+    "demo": "python3 scripts/make_demo.py"
   },
   "dependencies": {
     "hls.js": "1.6.13",
