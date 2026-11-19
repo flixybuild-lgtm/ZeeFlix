@@ -422,7 +422,9 @@ impl App {
             ShareTarget {
                 id: "x",
                 label: "X / Twitter",
-                url: format!("https://twitter.com/intent/tweet?text={encoded_message}&url={encoded_link}"),
+                url: format!(
+                    "https://twitter.com/intent/tweet?text={encoded_message}&url={encoded_link}"
+                ),
                 target: "_blank",
             },
             ShareTarget {
@@ -448,9 +450,7 @@ impl App {
             ShareTarget {
                 id: "email",
                 label: "Email",
-                url: format!(
-                    "mailto:?subject={encoded_message}&body={encoded}",
-                ),
+                url: format!("mailto:?subject={encoded_message}&body={encoded}",),
                 target: "_blank",
             },
         ]

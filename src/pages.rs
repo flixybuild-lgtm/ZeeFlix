@@ -242,7 +242,11 @@ impl App {
                 self.episodes(&f)
             } else {
                 // Ranked by shared genres instead of a single-genre dump.
-                format!("{}{}", self.share_sheet(id, BASE_TOKEN), self.related_rail(id, 6))
+                format!(
+                    "{}{}",
+                    self.share_sheet(id, BASE_TOKEN),
+                    self.related_rail(id, 6)
+                )
             }
         )
     }
