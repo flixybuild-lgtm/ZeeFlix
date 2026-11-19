@@ -503,7 +503,11 @@ impl App {
             if film.is_some() {
                 self.detail(id)
             } else {
-                self.unavailable()
+                // A dead share link still has to lead somewhere useful.
+                format!(
+                    r##"{}<div class="wrap"><a class="btn subtle" href="#movies">Browse the library</a></div>"##,
+                    self.unavailable()
+                )
             }
         )
     }

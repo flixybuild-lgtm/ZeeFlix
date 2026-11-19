@@ -55,7 +55,7 @@ jobs:
       - name: Run Rust Unit and Integration Tests
         run: |
           if ! cargo test --locked > /tmp/test.log 2>&1; then
-            grep -E "^(error|failures:|---- )" -A8 /tmp/test.log | head -n 150 | sed -E "s/^/::error::/" || true
+            grep -E "^(error|failures:|---- |thread )" -A10 /tmp/test.log | head -n 200 | sed -E "s/^/::error::/" || true
             exit 1
           fi
 

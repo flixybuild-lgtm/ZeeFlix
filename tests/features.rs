@@ -396,11 +396,11 @@ fn a_share_link_opens_a_canonical_title_page_with_social_metadata() {
     for need in [
         r#"<meta property="og:type" content="video.movie">"#,
         r#"<meta property="og:title" content="Sintel — free open film on Framewave">"#,
-        r#"<meta property="og:image" content="https://zeeflix.dpdns.org/art/sintel-wide.webp">"#,
+        r#"<meta property="og:image" content="https://zeeflix.dpdns.org/art/sintel.webp">"#,
         r#"<meta name="twitter:card" content="summary_large_image">"#,
         r#"application/ld+json"#,
-        r#""@type": "Movie""#,
-        r#""datePublished": "2010""#,
+        r#""@type":"Movie""#,
+        r#""datePublished":"2010""#,
     ] {
         assert!(html.contains(need), "metadata missing: {need}");
     }
