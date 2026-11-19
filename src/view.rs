@@ -480,14 +480,16 @@ impl App {
                 .to_string()
         };
         format!(
-            r##"<!doctype html><html lang="en"><head><meta charset="utf-8"><base href="{}"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b0c0e"><title>{og_title}</title><meta name="description" content="{}"><link rel="canonical" href="{}"><meta property="og:site_name" content="ZeeFlix"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{}"><meta name="twitter:description" content="{}"><meta name="twitter:image" content="{}art/{}.webp">{meta}<link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="style.css"><script type="module" src="app.js"></script></head><body><main id="main" tabindex="-1">{body}</main><footer class="footer wrap"><div><a href="index.html" class="brand"><img src="logo.svg" alt="" width="28" height="28"><span>ZeeFlix</span></a><p>Entertainment Without Limits.</p></div><nav aria-label="Footer"><a href="index.html">Library</a><a href="install.html">Download</a><a href="index.html#about">About</a></nav><p class="footer-bottom"><span>Created by Zeeshan Haider</span><span class="spectrum"></span><span>Open cinema collection</span></p></footer></body></html>"##,
-            base,
-            esc(description),
-            esc(&canonical),
-            esc(&og_title),
-            esc(description),
-            base,
-            esc(&image),
+            r##"<!doctype html><html lang="en"><head><meta charset="utf-8"><base href="{}"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b0c0e"><title>{}</title><meta name="description" content="{}"><link rel="canonical" href="{}"><meta property="og:site_name" content="ZeeFlix"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{}"><meta name="twitter:description" content="{}"><meta name="twitter:image" content="{}art/{}.webp">{}<link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="style.css"><script type="module" src="app.js"></script></head><body><main id="main" tabindex="-1">{}</main><footer class="footer wrap"><div><a href="index.html" class="brand"><img src="logo.svg" alt="" width="28" height="28"><span>ZeeFlix</span></a><p>Entertainment Without Limits.</p></div><nav aria-label="Footer"><a href="index.html">Library</a><a href="install.html">Download</a><a href="index.html#about">About</a></nav><p class="footer-bottom"><span>Created by Zeeshan Haider</span><span class="spectrum"></span><span>Open cinema collection</span></p></footer></body></html>"##,
+            base,              // <base href> so relative assets resolve from the root
+            esc(&og_title),    // <title>
+            esc(description),  // meta description
+            esc(&canonical),   // rel=canonical
+            esc(&og_title),    // twitter:title
+            esc(description),  // twitter:description
+            base,              // twitter:image origin
+            esc(&image),       // twitter:image file
+            meta,              // Open Graph + JSON-LD
             if film.is_some() {
                 self.detail(id)
             } else {
