@@ -26,13 +26,13 @@ fn main() {
         let i = icon(&page[start + 7..end]);
         page.replace_range(start..end + 2, &i);
     }
-    fs::write(out.join("index.html"), page).unwrap();
-
     // The home page must not keep an absolute canonical pointing at a stale host.
     assert!(
         !page.contains("{{canonical}}"),
         "canonical token left unresolved"
     );
+    fs::write(out.join("index.html"), page).unwrap();
+
     // One crawlable document per title, plus the sitemap and robots file that
     // point at them. `title/<id>.html` also works when a link is opened without
     // the fragment, because every page redirects on load.
