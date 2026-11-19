@@ -24,7 +24,7 @@
                 android:id="@+id/providerName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/zf_text"
+                android:textColor="?attr/zfText"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -33,7 +33,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:textColor="@color/zf_muted"
+                android:textColor="?attr/zfMuted"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -56,10 +56,10 @@
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:text="Watch"
-            android:textColor="@color/zf_accent_ink"
+            android:textColor="?attr/zfAccentInk"
             android:textSize="12sp"
             android:visibility="gone"
-            app:backgroundTint="@color/zf_accent" />
+            app:backgroundTint="?attr/zfAccent" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnProviderTest"
@@ -70,9 +70,9 @@
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:text="Test"
-            android:textColor="@color/zf_text"
+            android:textColor="?attr/zfText"
             android:textSize="12sp"
-            app:strokeColor="@color/zf_glass_stroke" />
+            app:strokeColor="?attr/zfGlassEdge" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnProviderEdit"
@@ -82,7 +82,7 @@
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:text="Edit"
-            android:textColor="@color/zf_muted"
+            android:textColor="?attr/zfMuted"
             android:textSize="12sp"
             android:visibility="gone" />
 
@@ -94,7 +94,7 @@
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:text="Delete"
-            android:textColor="@color/zf_bad"
+            android:textColor="?attr/zfBad"
             android:textSize="12sp"
             android:visibility="gone" />
     </LinearLayout>

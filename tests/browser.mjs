@@ -317,8 +317,7 @@ try {
     await page.goto(`${BASE}/#watch/gran-dillama`);
     await waitReady(page);
     await page.locator('a[href="#watch/llamigos"]').first().click();
-    await waitReady(page);
-    assert.ok((await page.locator('#main h1').textContent()).includes('Llamigos'));
+    await page.getByRole('heading', {name: /Llamigos/}).waitFor();
   });
 
   await check('7. Mocked multi-quality PeerTube API + Embed isolation + Authorized Download with pause/resume/cancel', async () => {
@@ -377,6 +376,62 @@ try {
     await page.locator('[data-probe-id="custom-1"] [data-act="delete-provider"]').click();
     await page.locator('#confirm-action').click();
     assert.equal(await page.locator('[data-probe-id="custom-1"]').count(), 0);
+  });
+
+  await check('Vega bridge: validate, browse extension metadata, search, play and disconnect', async () => {
+    const fixture = await browser.newPage({reducedMotion: 'reduce'});
+    try {
+      const origin = 'https://bridge.fixture.test';
+      await fixture.route(`${origin}/**`, async route => {
+        const url = new URL(route.request().url());
+        const headers = {'access-control-allow-origin':'*'};
+        if (url.pathname === '/manifest.json') return route.fulfill({headers, json:{id:'community.vega.stremio', resources:['stream'], types:['movie','series']}});
+        if (url.pathname === '/stream/movie/tt1234567.json') return route.fulfill({headers, json:{streams:[{name:'Demo provider', url:`${origin}/film.webm?temporary=1`}]}});
+        if (url.pathname === '/film.webm') return route.fulfill({headers, contentType:'video/webm', path:path.join(ROOT,'public/media/sintel.webm')});
+        return route.fulfill({status:404, headers});
+      });
+      await fixture.route('https://api.github.com/repos/Zenda-Cross/vega-providers/contents/manifest.json', route => route.fulfill({
+        headers:{'access-control-allow-origin':'*'}, json:{encoding:'base64',content:Buffer.from(JSON.stringify([{display_name:'Demo Extension', value:'demo', version:'2.0', disabled:true}])).toString('base64')}
+      }));
+      await fixture.goto(`${BASE}/#providers`);
+      await waitReady(fixture);
+      await fixture.locator('#bridge-index-btn').click();
+      await fixture.getByText('Demo Extension · v2.0 · Disabled upstream').waitFor();
+      await fixture.locator('#bridge-connect input').fill('https://github.com/Zenda-Cross/vega-providers');
+      await fixture.getByRole('button', {name:'Connect bridge'}).click();
+      await fixture.getByText('not its GitHub repository', {exact:false}).waitFor();
+      await fixture.locator('#bridge-connect input').fill(`${origin}/manifest.json`);
+      await fixture.getByRole('button', {name:'Connect bridge'}).click();
+      await fixture.getByText('Bridge saved on this device.', {exact:false}).waitFor();
+      await fixture.reload(); await waitReady(fixture);
+      await fixture.locator('#bridge-search input[name=titleId]').fill('tt1234567');
+      await fixture.locator('#bridge-search input[name=permission]').check();
+      await fixture.getByRole('button', {name:'Find streams'}).click();
+      await fixture.locator('#bridge-results').getByRole('button', {name:'Watch'}).click();
+      await fixture.waitForFunction(() => document.querySelector('video')?.readyState >= 2);
+      assert.equal(await fixture.locator('#player').getAttribute('data-id'), 'vega-session');
+      assert.equal(await fixture.locator('#download-current').isVisible(), false);
+      assert.equal(await fixture.evaluate(() => JSON.stringify(localStorage).includes('temporary=1')), false);
+      await fixture.getByRole('link', {name:'Back to providers'}).click();
+      await fixture.getByRole('button', {name:'Disconnect'}).click();
+      assert.equal(await fixture.locator('#bridge-search-panel').isVisible(), false);
+    } finally { await fixture.close(); }
+  });
+
+  await check('Liquid glass: Light and Matrix persist and particles respect reduced motion', async () => {
+    const fixture = await browser.newPage();
+    try {
+      await fixture.goto(`${BASE}/#settings`); await waitReady(fixture);
+      for (const theme of ['light', 'matrix']) {
+        await fixture.selectOption('#theme', theme);
+        await fixture.reload(); await waitReady(fixture);
+        assert.equal(await fixture.locator('html').getAttribute('data-theme'), theme);
+      }
+      const layer = fixture.locator('.liquid-field i').first();
+      assert.notEqual(await layer.evaluate(el => getComputedStyle(el).animationName), 'none');
+      await fixture.emulateMedia({reducedMotion:'reduce'});
+      assert.equal(await layer.evaluate(el => getComputedStyle(el).animationName), 'none');
+    } finally { await fixture.close(); }
   });
 
   await check('9. Responsive layouts (Desktop, Tablet, Mobile) and GitHub Pages subpath /ZeeFlix/', async () => {

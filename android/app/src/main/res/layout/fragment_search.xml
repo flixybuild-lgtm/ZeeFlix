@@ -2,7 +2,6 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/zf_bg"
     android:orientation="vertical"
     android:padding="14dp">
 
@@ -15,8 +14,8 @@
         android:imeOptions="actionSearch"
         android:inputType="text"
         android:paddingHorizontal="14dp"
-        android:textColor="@color/zf_text"
-        android:textColorHint="@color/zf_muted"
+        android:textColor="?attr/zfText"
+        android:textColorHint="?attr/zfMuted"
         android:textSize="14sp" />
 
     <LinearLayout
@@ -51,7 +50,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:textColor="@color/zf_muted"
+        android:textColor="?attr/zfMuted"
         android:textSize="12sp" />
 
     <androidx.recyclerview.widget.RecyclerView

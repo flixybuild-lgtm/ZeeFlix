@@ -9,7 +9,7 @@
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="190dp"
-        app:cardBackgroundColor="@color/zf_surface"
+        app:cardBackgroundColor="?attr/zfSurface"
         app:cardCornerRadius="10dp">
 
         <FrameLayout
@@ -48,7 +48,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="4dp"
                 android:layout_gravity="bottom"
-                android:progressTint="@color/zf_accent"
+                android:progressTint="?attr/zfAccent"
                 android:visibility="gone" />
         </FrameLayout>
     </androidx.cardview.widget.CardView>
@@ -60,7 +60,7 @@
         android:layout_marginTop="6dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="@color/zf_text"
+        android:textColor="?attr/zfText"
         android:textSize="13sp"
         android:textStyle="bold" />
 
@@ -70,6 +70,6 @@
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="@color/zf_muted"
+        android:textColor="?attr/zfMuted"
         android:textSize="11sp" />
 </LinearLayout>

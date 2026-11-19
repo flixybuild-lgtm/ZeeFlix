@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/zf_bg">
+    android:background="?attr/zfBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -23,7 +23,7 @@
             android:layout_width="match_parent"
             android:layout_height="240dp"
             android:layout_marginTop="8dp"
-            app:cardBackgroundColor="@color/zf_surface"
+            app:cardBackgroundColor="?attr/zfSurface"
             app:cardCornerRadius="16dp">
 
             <ImageView
@@ -39,7 +39,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:textColor="@color/zf_text"
+            android:textColor="?attr/zfText"
             android:textSize="28sp"
             android:textStyle="bold" />
 
@@ -48,7 +48,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:textColor="@color/zf_accent"
+            android:textColor="?attr/zfAccent"
             android:textSize="13sp" />
 
         <TextView
@@ -57,7 +57,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:lineSpacingExtra="4dp"
-            android:textColor="@color/zf_muted"
+            android:textColor="?attr/zfMuted"
             android:textSize="14sp" />
 
         <LinearLayout
@@ -72,10 +72,10 @@
                 android:layout_height="48dp"
                 android:layout_weight="1"
                 android:text="Watch Now"
-                android:textColor="@color/zf_accent_ink"
-                app:backgroundTint="@color/zf_accent"
+                android:textColor="?attr/zfAccentInk"
+                app:backgroundTint="?attr/zfAccent"
                 app:icon="@drawable/ic_play"
-                app:iconTint="@color/zf_accent_ink" />
+                app:iconTint="?attr/zfAccentInk" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDetailList"
@@ -84,8 +84,8 @@
                 android:layout_height="48dp"
                 android:layout_marginStart="10dp"
                 android:text="My List"
-                android:textColor="@color/zf_text"
-                app:strokeColor="@color/zf_glass_stroke" />
+                android:textColor="?attr/zfText"
+                app:strokeColor="?attr/zfGlassEdge" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDetailFav"
@@ -94,8 +94,8 @@
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
                 android:text="Fav"
-                android:textColor="@color/zf_text"
-                app:strokeColor="@color/zf_glass_stroke" />
+                android:textColor="?attr/zfText"
+                app:strokeColor="?attr/zfGlassEdge" />
         </LinearLayout>
 
         <TextView
@@ -106,7 +106,7 @@
             android:background="@drawable/bg_glass_card"
             android:lineSpacingExtra="5dp"
             android:padding="14dp"
-            android:textColor="@color/zf_text"
+            android:textColor="?attr/zfText"
             android:textSize="13sp" />
 
         <LinearLayout

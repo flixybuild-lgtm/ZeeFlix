@@ -40,7 +40,13 @@ class LibraryStore private constructor(context: Context) {
 
     var themeName: String
         get() = prefs.getString("theme_name", "cinema") ?: "cinema"
-        set(value) = prefs.edit().putString("theme_name", if (value == "midnight") "midnight" else "cinema").apply()
+        set(value) = prefs.edit().putString("theme_name", if (value in setOf("midnight", "light", "matrix")) value else "cinema").apply()
+
+    var vegaBridge: String
+        get() = prefs.getString("vega_bridge_v1", "").orEmpty()
+        set(value) {
+            prefs.edit().apply { if (value.isBlank()) remove("vega_bridge_v1") else putString("vega_bridge_v1", value) }.apply()
+        }
 
     private fun loadCatalog(): List<Film> = runCatching {
         appCtx.assets.open("catalog.tsv").bufferedReader().use {

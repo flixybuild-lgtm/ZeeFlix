@@ -65,7 +65,13 @@ class PlayerActivity : AppCompatActivity() {
 
         store = LibraryStore.get(this)
         val id = intent.getStringExtra("film_id").orEmpty()
-        val found = store.find(id)
+        val bridgeUrl = intent.getStringExtra("vega_stream_url")
+        val found = if (bridgeUrl != null) {
+            SourceValidator.validateProvider(intent.getStringExtra("vega_stream_title").orEmpty(), bridgeUrl,
+                "auto", allowDownload = false, rightsConfirmed = true).getOrNull()
+                ?.takeIf { it.url.startsWith("https://") && it.format != "embed" }
+                ?.copy(id = "vega-session")?.toFilm()
+        } else store.find(id)
         if (found == null) {
             Toast.makeText(this, "Title unavailable", Toast.LENGTH_SHORT).show()
             finish()
@@ -354,6 +360,7 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun saveProgress() {
+        if (!::film.isInitialized || film.id == "vega-session") return
         val exo = player ?: return
         val dur = (exo.duration / 1000L).toInt()
         val pos = (exo.currentPosition / 1000L).toInt()

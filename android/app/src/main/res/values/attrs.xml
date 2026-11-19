@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="zfBackground" format="color" />
+    <attr name="zfSurface" format="color" />
+    <attr name="zfText" format="color" />
+    <attr name="zfMuted" format="color" />
+    <attr name="zfAccent" format="color" />
+    <attr name="zfAccentInk" format="color" />
+    <attr name="zfGlassEdge" format="color" />
+    <attr name="zfGlassFill" format="color" />
+    <attr name="zfBad" format="color" />
+    <attr name="zfOk" format="color" />
+</resources>

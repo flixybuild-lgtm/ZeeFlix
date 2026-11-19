@@ -40,13 +40,13 @@
 
 ---
 
-## Play your own provider link
+## Connect Zenda-Cross or play a direct link
 
-Choose **Enter provider HTTPS** on Home. Paste an authorized HTTPS media URL, check the permission box and save it. The suggested display title is **Zenda-Cross**; change it for other providers. A name alone does not route playback, and a Vega plugin repository is not a video URL.
+**Zenda-Cross on web and Android:** open **Providers → Zenda-Cross · Vega bridge**, paste the HTTPS `manifest.json` URL of a running compatible bridge, and choose **Connect bridge**. Enter a movie IMDb ID (`tt1234567`) or an episode ID (`tt1234567:1:2`), confirm you have permission to watch, and choose **Find streams**. The web app can also browse the public GitHub extension index without installing it. See the [Vega bridge setup guide](docs/VEGA_BRIDGE.md) for hosting, trust, and playback requirements.
 
-Auto detects WebM, HLS, DASH and supported official embeds; other URLs use direct playback. Choose the format yourself if the link has no file extension. On Android choose **Save & Watch**; on the web select **Watch →** beside the saved provider. Saved sources can be tested, disabled, edited or removed under Providers.
+**Direct media:** Choose **Enter provider HTTPS** on Home. Paste an authorized HTTPS media URL, fill in the display title, check the permission box and save it. Auto detects WebM, HLS, DASH and supported official embeds. Choose the format yourself if the link has no file extension. On Android choose **Save & Watch**; on the web select **Watch →** beside the saved provider. Saved sources can be tested, disabled, edited or removed under Providers.
 
-<img src="docs/screenshots/provider-entry-mobile.png" alt="Framewave HTTPS provider entry on the mobile web app" width="310">
+**Themes:** Choose **Dark**, **Light**, **Matrix**, or the previous **Midnight blue** under Settings (Android: **Library → Settings**). Glass surfaces and subtle moving particles adapt to the palette. Particles stay still when the system requests reduced motion.
 
 ## ▶️ See it move
 
@@ -67,7 +67,7 @@ Auto detects WebM, HLS, DASH and supported official embeds; other URLs use direc
 - **A real app, not a template.** Kotlin + Jetpack + **AndroidX Media3 ExoPlayer** on Android; **Rust compiled to WebAssembly** on the web. Same catalogue, same design language, two engines.
 - **Screening-room UI** with a mint signal mark, custom poster art and the Anton / Manrope / Bebas Neue type system. Light enough to load instantly, dense enough to feel like a paid product.
 - **Plays almost anything.** MP4, WebM, HLS and DASH with real quality switching, subtitle tracks, audio tracks, `0.5×–2×` speed, ±10 s double-tap seeking, Picture-in-Picture and resume-where-you-left-off.
-- **Your own sources.** Add a direct video link, an HLS/DASH manifest or an official embed you are allowed to use, test the connection, then press play. Nothing is scraped, proxied or decrypted.
+- **Your own sources.** Add a direct video link, an HLS/DASH manifest or an official embed you are allowed to use, test the connection, then press play. Framewave plays the URLs directly; the optional Vega bridge runs separately.
 - **Offline when permitted.** Authorized progressive files download through the Android `DownloadManager` with pause/resume; the web app streams with resumable byte ranges.
 - **Private by architecture.** No login, no analytics SDK, no ad network. Lists, favorites, watch positions and provider links live on your device.
 

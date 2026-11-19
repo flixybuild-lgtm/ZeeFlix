@@ -2,21 +2,19 @@ package com.zeeflix.app.ui
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.zeeflix.app.R
-import com.zeeflix.app.data.LibraryStore
 import com.zeeflix.app.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        applyLiquidTheme()
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        applyThemeColors()
         binding.topBar.applyTopSystemBarInsets()
 
         if (savedInstanceState == null) {
@@ -43,16 +41,6 @@ class MainActivity : AppCompatActivity() {
                 if (frag is ProvidersFragment) frag.openAddDialog()
             }
         }
-    }
-
-    fun applyThemeColors() {
-        val midnight = LibraryStore.get(this).themeName == "midnight"
-        val bg = ContextCompat.getColor(this, if (midnight) R.color.zf_midnight_bg else R.color.zf_bg)
-        val surface = ContextCompat.getColor(this, if (midnight) R.color.zf_midnight_surface else R.color.zf_surface)
-        binding.mainRoot.setBackgroundColor(bg)
-        binding.bottomNav.setBackgroundColor(surface)
-        window.statusBarColor = bg
-        window.navigationBarColor = surface
     }
 
     private fun switchFragment(fragment: Fragment) {

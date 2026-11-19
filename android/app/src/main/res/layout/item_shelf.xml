@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:letterSpacing="0.16"
         android:paddingHorizontal="16dp"
-        android:textColor="@color/zf_accent"
+        android:textColor="?attr/zfAccent"
         android:textSize="9sp"
         android:textStyle="bold" />
 
@@ -21,7 +21,7 @@
         android:layout_height="wrap_content"
         android:paddingHorizontal="16dp"
         android:paddingBottom="8dp"
-        android:textColor="@color/zf_text"
+        android:textColor="?attr/zfText"
         android:textSize="20sp"
         android:textStyle="bold" />
 
