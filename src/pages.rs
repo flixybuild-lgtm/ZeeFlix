@@ -295,7 +295,10 @@ impl App {
             return self.unavailable();
         }
         p.id = "vega-session".into();
-        format!("<div class=\"wrap inner-page\">{}</div>", self.player_for(&p.film()))
+        format!(
+            "<div class=\"wrap inner-page\">{}</div>",
+            self.player_for(&p.film())
+        )
     }
     fn player_for(&self, f: &Film) -> String {
         let id = f.id.as_str();
