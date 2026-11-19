@@ -555,5 +555,6 @@ fn json_esc(s: &str) -> String {
     s.replace(['\n', '\r', '\t'], " ")
         .replace('\\', "\\\\")
         .replace('"', "\\\"")
-        .replace(['<', '>'], |c| format!("\\u{:04x}", c as u32))
+        .replace('<', "\\u003c")
+        .replace('>', "\\u003e")
 }
