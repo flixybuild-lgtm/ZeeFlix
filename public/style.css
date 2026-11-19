@@ -26,3 +26,22 @@
 .nav-app:before{content:"";width:8px;height:8px;flex:none;border-radius:50%;background:#b2541a;box-shadow:0 0 0 3px #ffffff4d}
 a.brand span{font-weight:800;letter-spacing:-.03em}
 @media(max-width:640px){.nav-app{font-size:10.5px;padding:6px 10px}.nav-app:before{width:6px;height:6px}}
+
+/* ---- Share sheet, related rail and the new filter controls ---- */
+.related-shelf{margin-top:6px}
+.share-sheet{margin-top:18px;padding:22px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(125deg,#ffffff09,#ffffff03)}
+.share-sheet h2{font-size:22px;margin:4px 0 14px}
+.share-native{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:14px}
+.share-targets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.share-target{font-size:12px;font-weight:700;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface2);color:#e7e5e2}
+.share-target:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+.share-target[data-share=whatsapp]:hover{border-color:#25d366;color:#25d366}
+.share-target[data-share=telegram]:hover{border-color:#2aabee;color:#2aabee}
+.share-field{display:grid;gap:6px;font-size:11px;font-weight:650;color:var(--muted);margin-bottom:8px}
+.share-field input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit}
+.filters #kind-filter,.filters #sort-filter{min-width:118px}
+@media(max-width:640px){
+  .share-sheet{padding:16px}
+  .share-native .btn{flex:1 1 auto;justify-content:center}
+  .related-shelf .rail{grid-auto-flow:column}
+}

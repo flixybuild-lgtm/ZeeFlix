@@ -6,6 +6,8 @@ const key = 'zeeflix:library:v1';
 let wasm, destroyPlayer, pageGeneration = 0, searchTimer, toastTimer, dismissSplash, storageWarned = false;
 let downloadsModule;
 const probeResults = new Map();
+/** Filter selections survive navigating away and back within the session. */
+const searchState = new Map();
 export function call(...args) {
   const input = encoder.encode(args.join('\n'));
   if (input.length > 524288) throw new Error('Library data exceeds its storage limit.');
@@ -22,26 +24,48 @@ function change(...args) { const result = call(...args); persist(); return resul
 export function toast(message) { const el = $('#toast'); el.textContent = message; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => el.hidden = true, 2600); }
 export const svg = id => `<svg class="ico" aria-hidden="true"><use href="icons.svg#${id}"></use></svg>`;
 const route = () => (location.hash.slice(1) || 'home').split('?')[0].slice(0, 150);
+/** Absolute base of the deployed app, used for share links and deep links. */
+const baseURL = () => new URL('.', document.baseURI).href;
 function prefs() { const [splash, autoplay, theme] = call('prefs').split('\n'); document.documentElement.dataset.theme = theme; return {splash: splash === '1', autoplay: autoplay === '1'}; }
 function menu(open) { $('#profile-menu').hidden = !open; document.querySelectorAll('[data-act=profile]').forEach(b => b.setAttribute('aria-expanded', String(open))); }
 function dialog(html) { $('#dialog-content').innerHTML = html; if (!$('#dialog').open) $('#dialog').showModal(); }
+/** The Rust renderer emits `{{base}}` for links that depend on where the site is
+ *  deployed (Pages subpath vs. custom domain). Patch it once per render. */
+function patchBase(html) { return html.replaceAll('{{base}}', baseURL()); }
 function confirmAction(title, copy, label, action) { dialog(`<div class="confirm"><p class="eyebrow">YOUR LIBRARY</p><h2>${title}</h2><p class="muted">${copy}</p><div class="actions"><button class="btn subtle" data-act="close-dialog">Cancel</button><button class="btn gold" id="confirm-action">${label}</button></div></div>`); $('#confirm-action').onclick = () => { $('#dialog').close(); action(); }; }
 async function render(scroll = true, first = false) {
   const generation = ++pageGeneration;
   clearTimeout(searchTimer); destroyPlayer?.(); destroyPlayer = undefined; menu(false); $('#dialog').close();
   const r = route();
   // Retain the pre-rendered home when nothing needs hydration.
-  if (!(first && r === 'home' && !window.__zfRestored)) $('#main').innerHTML = call('page', r);
+  if (!(first && r === 'home' && !window.__zfRestored)) $('#main').innerHTML = patchBase(call('page', r));
   document.querySelectorAll('[data-nav]').forEach(a => { const selected = a.dataset.nav === r || (a.dataset.nav === 'categories' && r.startsWith('genre/')); a.classList.toggle('current', selected); if (selected) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
   const title = $('#main h1')?.textContent;
   document.title = r === 'home' ? 'ZeeFlix — Entertainment Without Limits.' : `${title || 'Library'} · ZeeFlix`;
   if (scroll) { window.scrollTo({top: 0, behavior: 'instant'}); if (!first) $('#main').focus({preventScroll: true}); }
   if (r === 'search') $('#query')?.focus({preventScroll:true});
+  // Remember the chosen filters so a back-navigation does not silently reset them.
+  if (r === 'search') {
+    const saved = searchState.get('filters');
+    if (saved) for (const [sel, value] of Object.entries(saved)) { const el = $(sel); if (el) el.value = value; }
+  }
   if (r === 'providers') document.querySelectorAll('[data-probe-id]').forEach(row => { const result = probeResults.get(row.dataset.probeId); if (result && !row.querySelector('[data-act=test-provider]').disabled) status(row, result); });
   if ($('#player')) { const {mountPlayer} = await import('./player.js'); if (generation === pageGeneration) destroyPlayer = mountPlayer($('#player'), {change, toast, svg}); }
   if (r === 'downloads') { downloadsModule = await import('./downloads.js'); if (generation === pageGeneration) downloadsModule.paintDownloads(); }
 }
-function deliverSearch() { if (!$('#query')) return; $('#results').innerHTML = call('results', $('#query').value, $('#genre-filter').value, $('#actor-filter').value, $('#year-filter').value); }
+function deliverSearch() {
+  if (!$('#query')) return;
+  $('#results').innerHTML = call('results', $('#query').value, $('#genre-filter').value,
+    $('#actor-filter').value, $('#year-filter').value,
+    $('#kind-filter')?.value || '', $('#sort-filter')?.value || 'default');
+  searchState.set('filters', {
+    '#genre-filter': $('#genre-filter')?.value || '',
+    '#actor-filter': $('#actor-filter')?.value || '',
+    '#year-filter': $('#year-filter')?.value || '',
+    '#kind-filter': $('#kind-filter')?.value || '',
+    '#sort-filter': $('#sort-filter')?.value || 'default',
+  });
+}
 function setSaved(id, on) {
   document.querySelectorAll('[data-act=list]').forEach(b => { if (b.dataset.id !== id) return; b.classList.toggle('saved', on); b.setAttribute('aria-pressed', String(on));
     b.setAttribute('aria-label', b.getAttribute('aria-label').replace(on ? /^Add / : /^Remove /, on ? 'Remove ' : 'Add ').replace(on ? / to My List$/ : / from My List$/, on ? ' from My List' : ' to My List'));
@@ -66,6 +90,28 @@ function onClick(e) {
     case 'slide': case 'next-slide': case 'prev-slide': { const hero = $('.hero'), num = Number(hero.dataset.slide), count = Number(hero.dataset.slides); const slide = act === 'slide' ? Number(n) : (num + (act === 'next-slide' ? 1 : -1) + count) % count; $('#spotlight').innerHTML = call('hero', slide); break; }
     case 'reset-search': $('#query').value = ''; document.querySelectorAll('.filters select').forEach(s => s.value = ''); deliverSearch(); $('#query').focus(); break;
     case 'clear-history': confirmAction('Clear playback history?', 'This removes watch positions and recently watched titles on this device. Your list and favorites will stay.', 'Clear history', () => { change('clear-history'); render(false); toast('Playback history cleared'); }); break;
+    case 'open-share': dialog(call('share', id, baseURL())); break;
+    case 'share-native': {
+      import('./share.js').then(async m => {
+        const result = await m.shareTitle(id, button.closest('.share-sheet')?.querySelector('h2')?.textContent || 'ZeeFlix');
+        toast(result === 'shared' ? 'Shared' : result === 'copied' ? 'Link copied' : result === 'cancelled' ? 'Share cancelled' : 'Copy the link below to share');
+      });
+      break;
+    }
+    case 'copy-link': {
+      import('./share.js').then(async m => {
+        const url = m.copyURL(id);
+        try { await navigator.clipboard.writeText(url); toast('Link copied to clipboard'); }
+        catch { toast(url); }
+      });
+      break;
+    }
+    case 'download-poster': {
+      import('./share.js').then(m => m.downloadPoster(button.dataset.art, id))
+        .then(() => toast('Poster saved'))
+        .catch(err => toast(err.message || 'Poster could not be saved'));
+      break;
+    }
     case 'edit-provider': dialog(call('editor', id)); break;
     case 'delete-provider': confirmAction('Remove this provider?', 'Its title, watch position and bookmarks will be removed from this device.', 'Remove', () => {change('delete', id); probeResults.delete(id); render(false); toast('Provider removed');}); break;
     case 'enable': change('enable', id); probeResults.delete(id); render(false); break;

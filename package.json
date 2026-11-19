@@ -8,7 +8,7 @@
     "dev": "npm run build && python3 scripts/serve.py",
     "start": "python3 scripts/serve.py",
     "test:browser": "node tests/browser.mjs",
-    "test:web": "node --test tests/web.test.mjs tests/assets.test.mjs",
+    "test:web": "node --test tests/web.test.mjs tests/assets.test.mjs tests/share.test.mjs",
     "screenshots": "node scripts/screenshots.mjs",
     "marketing": "python3 scripts/make_marketing.py",
     "qr": "python3 scripts/make_qr.py",
