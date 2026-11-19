@@ -548,5 +548,3 @@ fn json_esc(s: &str) -> String {
         .replace('<', "\\u003c")
         .replace('>', "\\u003e")
 }
-
-}
