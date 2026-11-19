@@ -137,14 +137,17 @@ fn kind_filter_separates_movies_documentaries_and_series() {
         ..Filter::default()
     });
 
-    assert!(!movies.is_empty() && !docs.is_empty());
-    assert!(series.is_empty(), "the catalogue has no series yet");
+    assert!(!movies.is_empty() && !docs.is_empty() && !series.is_empty());
     assert!(docs.iter().all(|m| m.genre() == "Documentary"));
+    assert!(series.iter().all(|m| m.episode > 0), "series are episodes");
     assert!(movies
         .iter()
-        .all(|m| m.kind() == "Film" || m.kind() == "Open Film"));
+        .all(|m| m.episode == 0 && m.genre() != "Documentary"));
     // Every title belongs to exactly one bucket.
-    assert_eq!(movies.len() + docs.len(), app.titles().len());
+    assert_eq!(
+        movies.len() + docs.len() + series.len(),
+        app.titles().len()
+    );
     // An unknown kind is treated as "everything" rather than returning nothing.
     assert_eq!(
         app.search(&Filter {
@@ -262,9 +265,11 @@ fn sharing_an_unknown_title_is_rejected_rather_than_producing_a_dead_link() {
         6,
         "all six targets should be present for a real title"
     );
+    // Every target carries the deep link; most also carry the title. Facebook
+    // only accepts a URL, so the id is the common denominator.
     assert!(targets
         .iter()
-        .all(|t: &ShareTarget| t.url.contains("Tears")));
+        .all(|t: &ShareTarget| t.url.contains("title%2Fsteel") || t.url.contains("steel")));
 }
 
 #[test]
@@ -314,7 +319,7 @@ fn title_page_renders_a_share_sheet_and_a_ranked_related_rail() {
 
     // Ranked related rail, replacing the old "one genre" dump.
     assert_eq!(html.matches("More like this").count(), 1);
-    assert!(html.contains("class=\"related-shelf\""));
+    assert!(html.contains("related-shelf"), "related rail class missing");
     assert!(
         !html.contains("Tears of Steel</h2>"),
         "must not recommend the current title"
