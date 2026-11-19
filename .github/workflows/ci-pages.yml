@@ -56,8 +56,9 @@ jobs:
             cp /tmp/fmt.diff ci-diagnostics/fmt.diff
             git add -f ci-diagnostics/fmt.diff
             git commit -m "CI: rustfmt diff for ${{ github.sha }}" || true
-            git push -f origin "HEAD:refs/heads/ci-artifacts/fmt" || true
-            echo "::error::cargo fmt --check failed; patch at ci-artifacts/fmt ci-diagnostics/fmt.diff"
+            git push -f origin "HEAD:refs/heads/ci-artifacts/fmt-${GITHUB_RUN_ID}" || true
+            echo "patch: ci-artifacts/fmt-${GITHUB_RUN_ID}"
+            echo "::error::cargo fmt --check failed; see ci-artifacts/fmt-${GITHUB_RUN_ID}"
             exit 1
           fi
           set +e
@@ -71,8 +72,8 @@ jobs:
             cp /tmp/clippy.log ci-diagnostics/clippy.log
             git add -f ci-diagnostics/clippy.log
             git commit -m "CI: clippy log for ${{ github.sha }}" || true
-            git push -f origin "HEAD:refs/heads/ci-artifacts/clippy" || true
-            echo "::error::clippy failed; log at ci-artifacts/clippy ci-diagnostics/clippy.log"
+            git push -f origin "HEAD:refs/heads/ci-artifacts/clippy-${GITHUB_RUN_ID}" || true
+            echo "::error::clippy failed; see ci-artifacts/clippy-${GITHUB_RUN_ID}"
             exit 1
           fi
 
