@@ -685,7 +685,6 @@ pub fn encode_component(raw: &str) -> String {
     out
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
