@@ -224,8 +224,7 @@ fn share_targets_are_well_formed_and_carry_the_encoded_link() {
     let app = App::default();
     let link = app.share_link("sintel", "https://zeeflix.dpdns.org/");
     assert_eq!(
-        link,
-        "https://zeeflix.dpdns.org/title/sintel.html#title/sintel",
+        link, "https://zeeflix.dpdns.org/title/sintel.html#title/sintel",
         "share links must open a pre-rendered document"
     );
 
