@@ -238,7 +238,7 @@ fn share_targets_are_well_formed_and_carry_the_encoded_link() {
     // The deep link must be percent-encoded exactly once, not double-encoded.
     assert!(whatsapp
         .url
-        .contains("https%3A%2F%2Fzeeflix.dpdns.org%2F%23title%2Fsintel"));
+        .contains("https%3A%2F%2Fzeeflix.dpdns.org%2Ftitle%2Fsintel.html%23title%2Fsintel"));
     assert!(!whatsapp.url.contains("%253A"), "double-encoded link");
 
     let x = targets.iter().find(|t| t.id == "x").expect("x target");
