@@ -39,7 +39,7 @@ jobs:
       - name: Format and Lint (Rust)
         run: |
           cargo fmt --check
-          cargo clippy --all-targets -- -D warnings
+          cargo clippy --all-targets --locked -- -D warnings
 
       - name: Run Rust Unit and Integration Tests
         run: cargo test --locked
