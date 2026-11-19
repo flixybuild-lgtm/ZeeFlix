@@ -42,8 +42,8 @@ jobs:
           # log is not readable from every client, but annotations always are.
           report() { grep -E "^(error|warning: unused)" -A6 "$1" | head -n 60 | sed -E "s/^/::error::/" || true; }
           if ! cargo fmt --check > /tmp/fmt.log 2>&1; then
-            report /tmp/fmt.log
-            echo "::error::cargo fmt --check failed; run cargo fmt"
+            # rustfmt prints a diff, not "error:" lines, so annotate it verbatim.
+            head -n 200 /tmp/fmt.log | sed -E "s/^/::error::/"
             exit 1
           fi
           if ! cargo clippy --all-targets --locked -- -D warnings > /tmp/clippy.log 2>&1; then
