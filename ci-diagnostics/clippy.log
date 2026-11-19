@@ -1,0 +1,60 @@
+[1m[92m    Checking[0m zeeflix v1.0.0 (/home/runner/work/ZeeFlix/ZeeFlix)
+[1m[91merror[E0369][0m[1m: binary operation `==` cannot be applied to type `[zeeflix::Film]`[0m
+  [1m[94m--> [0mtests/features.rs:17:5
+   [1m[94m|[0m
+[1m[94m17[0m [1m[94m|[0m     assert_eq!(app.search(&f)[..3], app.titles()[..3]);
+   [1m[94m|[0m     [1m[91m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+   [1m[94m|[0m     [1m[91m|[0m
+   [1m[94m|[0m     [1m[91m[zeeflix::Film][0m
+   [1m[94m|[0m     [1m[91m[zeeflix::Film][0m
+   [1m[94m|[0m
+[1m[92mnote[0m: `zeeflix::Film` does not implement `std::cmp::PartialEq`
+  [1m[94m--> [0msrc/model.rs:17:1
+   [1m[94m|[0m
+[1m[94m17[0m [1m[94m|[0m pub struct Film {
+   [1m[94m|[0m [1m[92m^^^^^^^^^^^^^^^[0m [1m[92m`zeeflix::Film` is defined in another crate[0m
+
+[1m[91merror[E0596][0m[1m: cannot borrow `app` as mutable, as it is not declared as mutable[0m
+   [1m[94m--> [0mtests/features.rs:327:9
+    [1m[94m|[0m
+[1m[94m327[0m [1m[94m|[0m     let app = App::default();
+    [1m[94m|[0m         [1m[91m^^^[0m [1m[91mnot mutable[0m
+[1m[94m...[0m
+[1m[94m339[0m [1m[94m|[0m     let newest = app.command("results\n\n\n\n\nMovies\nnewest");
+    [1m[94m|[0m                  [1m[94m---[0m [1m[94mcannot borrow as mutable[0m
+[1m[94m...[0m
+[1m[94m344[0m [1m[94m|[0m     let docs = app.command("results\n\n\n\n\nDocumentaries\ndefault");
+    [1m[94m|[0m                [1m[94m---[0m [1m[94mcannot borrow as mutable[0m
+[1m[94m...[0m
+[1m[94m352[0m [1m[94m|[0m     let legacy = app.command("results\nsteel\n\n\n");
+    [1m[94m|[0m                  [1m[94m---[0m [1m[94mcannot borrow as mutable[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: consider changing this to be mutable
+    [1m[94m|[0m
+[1m[94m327[0m [1m[94m| [0m    let [92mmut [0mapp = App::default();
+    [1m[94m|[0m         [92m+++[0m
+
+[1m[91merror[E0596][0m[1m: cannot borrow `app` as mutable, as it is not declared as mutable[0m
+   [1m[94m--> [0mtests/features.rs:358:9
+    [1m[94m|[0m
+[1m[94m358[0m [1m[94m|[0m     let app = App::default();
+    [1m[94m|[0m         [1m[91m^^^[0m [1m[91mnot mutable[0m
+[1m[94m359[0m [1m[94m|[0m     assert!(app
+    [1m[94m|[0m             [1m[94m---[0m [1m[94mcannot borrow as mutable[0m
+[1m[94m...[0m
+[1m[94m362[0m [1m[94m|[0m     assert!(app.command("related\nnope\n4").is_empty());
+    [1m[94m|[0m             [1m[94m---[0m [1m[94mcannot borrow as mutable[0m
+[1m[94m363[0m [1m[94m|[0m     assert!(app
+    [1m[94m|[0m             [1m[94m---[0m [1m[94mcannot borrow as mutable[0m
+[1m[94m...[0m
+[1m[94m367[0m [1m[94m|[0m     assert!(app
+    [1m[94m|[0m             [1m[94m---[0m [1m[94mcannot borrow as mutable[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: consider changing this to be mutable
+    [1m[94m|[0m
+[1m[94m358[0m [1m[94m| [0m    let [92mmut [0mapp = App::default();
+    [1m[94m|[0m         [92m+++[0m
+
+[1mSome errors have detailed explanations: E0369, E0596.[0m
+[1mFor more information about an error, try `rustc --explain E0369`.[0m
+[1m[91merror[0m: could not compile `zeeflix` (test "features") due to 3 previous errors
