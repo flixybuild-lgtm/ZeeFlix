@@ -1,0 +1,19 @@
+diff --git a/src/model.rs b/src/model.rs
+index c609b64..9a83e99 100644
+--- a/src/model.rs
++++ b/src/model.rs
+@@ -685,7 +685,6 @@ pub fn encode_component(raw: &str) -> String {
+     out
+ }
+ 
+-
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+@@ -716,4 +715,4 @@ mod tests {
+         assert!(!safe_source("https:///clip"));
+         assert!(!safe_source("media/../../x"));
+     }
+-}
+\ No newline at end of file
++}
