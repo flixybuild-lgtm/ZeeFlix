@@ -1,4 +1,4 @@
-use crate::{App, Film, Filter, GENRES, SPOTLIGHT};
+use crate::{App, Film, Filter, Sort, GENRES, SPOTLIGHT};
 use std::fmt::Write;
 pub fn esc(s: &str) -> String {
     s.replace('&', "&amp;")
@@ -331,8 +331,76 @@ impl App {
         } else {
             self.grid(&r, false)
         };
-        format!("<div class=\"suggestions\">{suggestions}</div><div class=\"section-head compact\"><h2>{}</h2><span class=\"muted\">{} titles</span></div>{content}",if f.query.trim().is_empty(){"Explore the library"}else{"Search results"},r.len())
+        let caption = match f.sort {
+            Sort::Newest => " · newest first",
+            Sort::Oldest => " · oldest first",
+            Sort::Shortest => " · shortest first",
+            Sort::Longest => " · longest first",
+            Sort::Title => " · A–Z",
+            Sort::Default => "",
+        };
+        let heading = match (f.kind, f.query.trim().is_empty()) {
+            ("Movies", _) => "Movies",
+            ("Documentaries", _) => "Documentaries",
+            ("Series", _) => "Series",
+            (_, true) => "Explore the library",
+            (_, false) => "Search results",
+        };
+        format!("<div class=\"suggestions\">{suggestions}</div><div class=\"section-head compact\"><h2>{heading}</h2><span class=\"muted\">{} titles{caption}</span></div>{content}", r.len())
     }
+    /// "More like this" rail appended to a title page.
+    pub fn related_rail(&self, id: &str, limit: usize) -> String {
+        let items = self.related(id, limit);
+        if items.is_empty() {
+            return String::new();
+        }
+        format!(
+            r##"<section class="shelf related-shelf" aria-labelledby="related-head"><div class="section-head"><div><p class="overline"><i></i>KEEP WATCHING NEXT</p><h2 id="related-head">More like this</h2></div><a class="view-all" href="#movies">Browse all {}</a></div><div class="rail" role="list">{}</div></section>"##,
+            icon("right"),
+            items.iter().map(|m| self.card(m, None)).collect::<String>()
+        )
+    }
+
+    /// Share sheet: native buttons are wired in app.js; these are the guaranteed
+    /// fallbacks for platforms without the Web Share API.
+    pub fn share_sheet(&self, id: &str, base: &str) -> String {
+        let Some(film) = self.find(id) else {
+            return String::new();
+        };
+        let link = self.share_link(id, base);
+        if link.is_empty() {
+            return String::new();
+        }
+        let targets = self
+            .share_targets(id, base)
+            .iter()
+            .fold(String::new(), |mut out, t| {
+                write!(
+                    out,
+                    r##"<a class="share-target" data-share="{}" href="{}" target="{}" rel="noopener noreferrer">{}</a>"##,
+                    t.id,
+                    esc(&t.url),
+                    t.target,
+                    esc(t.label)
+                )
+                .unwrap();
+                out
+            });
+        format!(
+            r##"<div class="share-sheet" data-share-id="{}"><p class="eyebrow"><i></i>SHARE THIS FILM</p><h2>{}</h2><div class="share-native"><button class="btn gold" data-act="share-native" data-id="{}">{} Share…</button><button class="btn subtle" data-act="copy-link" data-id="{}">{} Copy link</button><button class="btn subtle" data-act="download-poster" data-art="{}" data-id="{}">{} Save poster</button></div><div class="share-targets">{targets}</div><label class="share-field">Direct link<input type="text" readonly value="{}" aria-label="Shareable link" onclick="this.select()"></label><p class="fine">Link opens the title straight away on any device. No account needed.</p></div>"##,
+            esc(id),
+            esc(&film.title),
+            esc(id),
+            icon("link"),
+            esc(id),
+            icon("link"),
+            esc(&film.art),
+            esc(id),
+            icon("download"),
+            esc(&link)
+        )
+    }
+
     pub fn search_page(&self) -> String {
         let all = self.titles();
         let genres = GENRES.iter().map(|s| opt(s, s, "")).collect::<String>();
@@ -354,7 +422,7 @@ impl App {
             .map(|s| opt(s, s, ""))
             .collect::<String>();
         format!(
-            r#"{}<div class="search-box">{}<input id="query" type="search" placeholder="Search films, genres or cast…" maxlength="100" autocomplete="off" aria-label="Search titles"></div><div class="filters"><label>Genre<select id="genre-filter"><option value="">All genres</option>{genres}</select></label><label>Actor<select id="actor-filter"><option value="">All actors</option>{actors}</select></label><label>Year<select id="year-filter"><option value="">All years</option>{years}</select></label><button class="textbtn" data-act="reset-search">Reset filters</button></div><div id="results">{}</div>"#,
+            r#"{}<div class="search-box">{}<input id="query" type="search" placeholder="Search films, genres or cast…" maxlength="100" autocomplete="off" aria-label="Search titles"></div><div class="filters"><label>Genre<select id="genre-filter"><option value="">All genres</option>{genres}</select></label><label>Actor<select id="actor-filter"><option value="">All actors</option>{actors}</select></label><label>Year<select id="year-filter"><option value="">All years</option>{years}</select></label><label>Type<select id="kind-filter"><option value="">Everything</option><option value="Movies">Movies</option><option value="Documentaries">Documentaries</option><option value="Series">Series</option></select></label><label>Sort<select id="sort-filter"><option value="default">Featured</option><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="shortest">Shortest first</option><option value="longest">Longest first</option><option value="title">A–Z</option></select></label><button class="textbtn" data-act="reset-search">Reset filters</button></div><div id="results">{}</div>"#,
             head(
                 "DISCOVERY",
                 "Search",
