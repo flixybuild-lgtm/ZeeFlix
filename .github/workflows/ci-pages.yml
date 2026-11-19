@@ -47,7 +47,7 @@ jobs:
             exit 1
           fi
           if ! cargo clippy --all-targets --locked -- -D warnings > /tmp/clippy.log 2>&1; then
-            report /tmp/clippy.log
+            grep -vE "^(\s+(Checking|Compiling|Finished))" /tmp/clippy.log | head -n 120 | sed -E "s/^/::error::/"
             echo "::error::clippy failed"
             exit 1
           fi
@@ -55,7 +55,7 @@ jobs:
       - name: Run Rust Unit and Integration Tests
         run: |
           if ! cargo test --locked > /tmp/test.log 2>&1; then
-            grep -E "^(error|failures:|---- )" -A8 /tmp/test.log | head -n 120 | sed -E "s/^/::error::/" || true
+            grep -E "^(error|failures:|---- )" -A8 /tmp/test.log | head -n 150 | sed -E "s/^/::error::/" || true
             exit 1
           fi
 
