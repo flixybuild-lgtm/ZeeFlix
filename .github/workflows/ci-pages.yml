@@ -104,6 +104,19 @@ jobs:
           ! grep -rq "{{" dist/index.html dist/title/sintel.html
           echo "install + crawl surface OK"
 
+      - name: Enable GitHub Pages (first run only)
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The site cannot deploy until Pages exists. Creating it is idempotent:
+          # a second call simply reports 409 and is ignored. Requires the workflow
+          # token to be allowed to administer Pages (repo default is write).
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/pages" \
+            -f 'build_type=workflow' -f 'source[branch]=main' -f 'source[path]=/' \
+            > /dev/null 2>&1 || echo "Pages already configured or not permitted; continuing"
+          gh api "repos/${GITHUB_REPOSITORY}/pages" --jq '"pages: \(.html_url // "pending")"' || true
+
       - name: Setup Pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
@@ -151,3 +164,13 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - name: Report the deployed URL
+        run: |
+          URL="${{ steps.deployment.outputs.page_url }}"
+          if [ -z "$URL" ]; then
+            echo "::warning::Pages deployment did not complete. Enable Pages in Settings → Pages (Source: GitHub Actions)."
+          else
+            echo "::notice::Framewave is live at $URL"
+          fi
