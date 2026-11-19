@@ -144,10 +144,7 @@ fn kind_filter_separates_movies_documentaries_and_series() {
         .iter()
         .all(|m| m.episode == 0 && m.genre() != "Documentary"));
     // Every title belongs to exactly one bucket.
-    assert_eq!(
-        movies.len() + docs.len() + series.len(),
-        app.titles().len()
-    );
+    assert_eq!(movies.len() + docs.len() + series.len(), app.titles().len());
     // An unknown kind is treated as "everything" rather than returning nothing.
     assert_eq!(
         app.search(&Filter {
