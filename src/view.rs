@@ -438,22 +438,32 @@ impl App {
     /// template engine: the Wasm build stays dependency-free.
     pub fn title_document(&self, id: &str, base: &str) -> String {
         let base = normalise_base(base);
+        // `find` returns an owned Film, so the copy used in the head tags is
+        // owned too: the fallbacks outlive the closures that read them.
         let film = self.find(id);
-        let title = film.map_or("Title unavailable", |f| f.title.as_str());
-        let description = film.map_or(
-            "This title may belong to a disabled or removed provider.",
-            |f| f.description.as_str(),
-        );
+        let title = film
+            .as_ref()
+            .map_or("Title unavailable", |f| f.title.as_str())
+            .to_string();
+        let description = film
+            .as_ref()
+            .map_or(
+                "This title may belong to a disabled or removed provider.",
+                |f| f.description.as_str(),
+            )
+            .to_string();
         let canonical = self.share_link(id, &base);
         let canonical = if canonical.is_empty() {
             format!("{base}#movies")
         } else {
             canonical
         };
-        let image = film.map_or("steel-wide", |f| f.art.as_str());
+        let image = film
+            .as_ref()
+            .map_or("steel-wide", |f| f.art.as_str())
+            .to_string();
         let og_title = format!("{title} — free open film on Framewave");
-        let meta = if film.is_some() {
-            let f = film.unwrap();
+        let meta = if let Some(f) = film.as_ref() {
             let json = format!(
                 r#"{{"@context":"https://schema.org","@type":"Movie","name":"{}","description":"{}","image":"{}art/{}.webp","datePublished":"{}","genre":"{}","url":"{}","isFamilyFriendly":true,"contentLocation":"Open cinema collection","productionCompany":{{"@type":"Organization","name":"Blender Foundation"}},"potentialAction":{{"@type":"WatchAction","target":"{}#watch/{}"}}}}"#,
                 json_esc(&f.title),
@@ -469,7 +479,7 @@ impl App {
             format!(
                 r#"<meta property="og:type" content="video.movie"><meta property="og:title" content="{}"><meta property="og:description" content="{}"><meta property="og:image" content="{}art/{}.webp"><meta property="og:url" content="{}"><meta property="video:release_date" content="{}"><script type="application/ld+json">{json}</script>"#,
                 esc(&og_title),
-                esc(description),
+                esc(&description),
                 base,
                 esc(&f.art),
                 esc(&canonical),
@@ -483,10 +493,10 @@ impl App {
             r##"<!doctype html><html lang="en"><head><meta charset="utf-8"><base href="{}"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#091513"><title>{}</title><meta name="description" content="{}"><link rel="canonical" href="{}"><meta property="og:site_name" content="Framewave"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{}"><meta name="twitter:description" content="{}"><meta name="twitter:image" content="{}art/{}.webp">{}<link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="style.css"><script type="module" src="app.js"></script></head><body><main id="main" tabindex="-1">{}</main><footer class="footer wrap"><div><a href="index.html" class="brand"><img src="logo.svg" alt="" width="28" height="28"><span>Framewave</span></a><p>Cinema on your wavelength.</p></div><nav aria-label="Footer"><a href="index.html">Library</a><a href="install.html">Download</a><a href="index.html#about">About</a></nav><p class="footer-bottom"><span>Created by Zeeshan Haider</span><span class="spectrum"></span><span>Open cinema collection</span></p></footer></body></html>"##,
             base,
             esc(&og_title),
-            esc(description),
+            esc(&description),
             esc(&canonical),
             esc(&og_title),
-            esc(description),
+            esc(&description),
             base,
             esc(&image),
             meta,
