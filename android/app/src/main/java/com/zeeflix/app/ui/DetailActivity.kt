@@ -10,6 +10,7 @@ import com.zeeflix.app.databinding.ActivityDetailBinding
 
 class DetailActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        applyLiquidTheme()
         super.onCreate(savedInstanceState)
         val binding = ActivityDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)

@@ -10,8 +10,10 @@ impl App {
         let (page, arg) = route.split_once('/').unwrap_or((route, ""));
         if page == "home" || page.is_empty() {
             return format!(
-                r#"<div id="spotlight">{}</div><div class="home-body wrap"><section class="source-dock"><div><small>PERSONAL SCREENING ROOM</small><h2>Bring your own stream.</h2><p>Play an authorized video link. No plugins required.</p></div><button class="btn gold" data-act="edit-provider">Enter provider HTTPS ↗</button></section><div class="genre-bar" id="genre-bar" aria-label="Genre filters">{}</div><div id="home-feed">{}</div></div>"#,
+                r##"<div id="spotlight">{}</div><div class="home-body wrap"><section class="source-dock"><span class="dock-signal" aria-hidden="true">{}</span><div><small>THE CONNECTION DECK</small><h2>Your screen. Your sources.</h2><p>Connect a Vega bridge for Zenda-Cross or play an authorized video link.</p></div><div class="source-actions"><a class="btn gold" href="#providers">{} Open Providers</a><button class="btn glass" data-act="edit-provider">Enter provider HTTPS ↗</button></div></section><div class="genre-bar" id="genre-bar" aria-label="Genre filters">{}</div><div id="home-feed">{}</div></div>"##,
                 self.hero(0),
+                icon("spark"),
+                icon("link"),
                 self.chips("All"),
                 self.feed("All")
             );
@@ -283,6 +285,26 @@ impl App {
         let Some(f) = self.find(id) else {
             return self.unavailable();
         };
+        self.player_for(&f)
+    }
+    pub(crate) fn bridge_player(&self, name: &str, url: &str) -> String {
+        let Ok(mut p) = crate::Provider::new(name, url, "auto", false) else {
+            return self.unavailable();
+        };
+        if !p.url.starts_with("https://") || p.format == "embed" {
+            return self.unavailable();
+        }
+        p.id = "vega-session".into();
+        format!("<div class=\"wrap inner-page\">{}</div>", self.player_for(&p.film()))
+    }
+    fn player_for(&self, f: &Film) -> String {
+        let id = f.id.as_str();
+        let bridge = id == "vega-session";
+        let (back, back_label) = if bridge {
+            ("#providers".into(), "Back to providers")
+        } else {
+            (format!("#title/{id}"), "Film details")
+        };
         let next = if f.id == "gran-dillama" {
             "llamigos"
         } else {
@@ -306,7 +328,7 @@ impl App {
                 out
             });
         format!(
-            r##"<div id="player" class="watch-page" data-id="{}" data-src="{}" data-format="{}" data-title="{}" data-resume="{}" data-download="{}" data-next="{next}" data-autoplay="{}"><a class="back-link" href="#title/{}">{} Film details</a><div class="watch-head"><div><p class="eyebrow"><i></i>NOW PLAYING</p><h1>{}</h1></div><span class="provider-label">{}</span></div><div id="stage" class="stage" tabindex="0" aria-label="Video player"><video playsinline preload="metadata" poster="art/{}.webp" aria-label="{}"></video><div id="embed-slot"></div><div id="player-message" class="player-message" role="status">Connecting to provider…</div><div id="controls" class="controls"><input type="range" id="seek" min="0" max="1000" value="0" aria-label="Playback timeline"><div class="control-line"><button data-media="play" aria-label="Play or pause">{}</button><button data-media="mute" aria-label="Mute or unmute">{}</button><input id="volume" type="range" min="0" max="1" step="0.05" value="1" aria-label="Volume"><span id="time">0:00 / 0:00</span><span class="spacer"></span><button data-media="pip" aria-label="Picture in picture" hidden>{}</button><button data-media="fullscreen" aria-label="Fullscreen">{}</button></div></div></div><div id="playback-options" class="playback-options"><label>Speed<select id="speed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label><label hidden>Quality<select id="quality"></select></label><label hidden>Subtitles<select id="subtitles"></select></label><label hidden>Audio<select id="audio-tracks"></select></label><span class="spacer"></span><button id="download-current" class="btn subtle small" hidden>{} Download</button>{episode_nav}</div><div id="transfer-slot"></div><p class="watch-synopsis">{}</p>{}<details class="shortcuts"><summary>Player shortcuts &amp; gestures</summary><p>Space or K: play/pause · ← / →: seek 10 seconds · ↑ / ↓: volume · M: mute · F: fullscreen. Double-tap the left or right side of the video to seek. Landscape lock is used in fullscreen when supported. Embedded players use their provider’s controls.</p></details>{}</div>"##,
+            r##"<div id="player" class="watch-page" data-id="{}" data-src="{}" data-format="{}" data-title="{}" data-resume="{}" data-download="{}" data-next="{next}" data-autoplay="{}"><a class="back-link" href="{back}">{} {back_label}</a><div class="watch-head"><div><p class="eyebrow"><i></i>NOW PLAYING</p><h1>{}</h1></div><span class="provider-label">{}</span></div><div id="stage" class="stage" tabindex="0" aria-label="Video player"><video playsinline preload="metadata" poster="art/{}.webp" aria-label="{}"></video><div id="embed-slot"></div><div id="player-message" class="player-message" role="status">Connecting to provider…</div><div id="controls" class="controls"><input type="range" id="seek" min="0" max="1000" value="0" aria-label="Playback timeline"><div class="control-line"><button data-media="play" aria-label="Play or pause">{}</button><button data-media="mute" aria-label="Mute or unmute">{}</button><input id="volume" type="range" min="0" max="1" step="0.05" value="1" aria-label="Volume"><span id="time">0:00 / 0:00</span><span class="spacer"></span><button data-media="pip" aria-label="Picture in picture" hidden>{}</button><button data-media="fullscreen" aria-label="Fullscreen">{}</button></div></div></div><div id="playback-options" class="playback-options"><label>Speed<select id="speed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label><label hidden>Quality<select id="quality"></select></label><label hidden>Subtitles<select id="subtitles"></select></label><label hidden>Audio<select id="audio-tracks"></select></label><span class="spacer"></span><button id="download-current" class="btn subtle small" hidden>{} Download</button>{episode_nav}</div><div id="transfer-slot"></div><p class="watch-synopsis">{}</p>{}<details class="shortcuts"><summary>Player shortcuts &amp; gestures</summary><p>Space or K: play/pause · ← / →: seek 10 seconds · ↑ / ↓: volume · M: mute · F: fullscreen. Double-tap the left or right side of the video to seek. Landscape lock is used in fullscreen when supported. Embedded players use their provider’s controls.</p></details>{}</div>"##,
             f.id,
             esc(&f.source),
             f.format,
@@ -314,7 +336,6 @@ impl App {
             self.resume(id),
             f.download,
             self.autoplay,
-            f.id,
             icon("back"),
             esc(&f.title),
             f.provider(),
@@ -326,9 +347,9 @@ impl App {
             icon("full"),
             icon("download"),
             esc(&f.description),
-            self.credit(&f),
+            if bridge { String::new() } else { self.credit(f) },
             if f.episode > 0 {
-                self.episodes(&f)
+                self.episodes(f)
             } else {
                 String::new()
             }
@@ -352,7 +373,7 @@ impl App {
             r#"<form id="provider-form"><p class="eyebrow"><i></i>MEDIA CONNECTION</p><h2>{} provider</h2><p class="muted">Paste a playable HTTPS link, not a plugin repository. Change the display title to match your stream.</p><input type="hidden" name="key" value="{}"><label>Display title<input name="name" required maxlength="90" placeholder="My short film" value="{}"></label><label>Source type<select name="format">{options}</select></label><label>Provider HTTPS URL<input name="url" required maxlength="2048" placeholder="https://…" value="{}"></label><p class="fine">Use HTTPS. Embeds must be official YouTube, Vimeo or Blender player links. Do not enter credentials.</p><label class="check-label"><input type="checkbox" name="download" {}> Allow file downloads (direct video only)</label><label class="check-label"><input type="checkbox" name="rights" required> I have permission to stream this media and authorize any downloads.</label><p id="form-error" role="alert"></p><button class="btn gold" type="submit">Save provider {}</button></form>"#,
             if p.is_some() { "Edit" } else { "Add" },
             p.map_or("", |p| &p.id),
-            p.map_or_else(|| "Zenda-Cross".into(), |p| esc(&p.name)),
+            p.map_or_else(String::new, |p| esc(&p.name)),
             p.map_or_else(String::new, |p| esc(&p.url)),
             if p.is_some_and(|p| p.download) {
                 "checked"
@@ -390,26 +411,29 @@ impl App {
         }));
         let rows=list.iter().fold(String::new(), |mut out, (id,name,fmt,url,on)| {let custom=id.starts_with("custom-");let watch=if custom && *on { format!(r##"<a class="text-link" href="#watch/{id}">Watch →</a>"##) } else {String::new()};let edit=if custom{format!(r#"<button class="icon-btn" aria-label="Edit {}" data-act="edit-provider" data-id="{id}">{}</button><button class="icon-btn" aria-label="Delete {}" data-act="delete-provider" data-id="{id}">{}</button>"#,esc(name),icon("edit"),esc(name),icon("trash"))}else{String::new()};write!(out,r#"<div class="provider-row" data-probe-id="{id}" data-format="{fmt}" data-url="{}"><span class="setting-ico">{}</span><div class="provider-copy"><h3>{}</h3><p>{} · <span class="status" role="status">{}</span></p></div><div class="provider-acts">{watch}<button class="btn subtle small" data-act="test-provider" {}>Test</button>{edit}<button role="switch" class="switch" data-act="enable" data-id="{id}" aria-checked="{on}" aria-label="Enable {}"></button></div></div>"#,esc(url),icon("link"),esc(name),if custom{fmt.to_uppercase()}else{"Built-in".into()},if *on{"Not tested"}else{"Disabled"},if *on{""}else{"disabled"},esc(name)).unwrap(); out});
         format!(
-            r#"{}<div class="panel-head"><h2>Media sources</h2><button class="btn gold small" data-act="edit-provider">{} Add provider</button></div><div class="panel">{rows}</div><p class="fine">Tests run from your browser. An unreachable host or a CORS restriction is reported, never assumed connected. Disabling a source removes its titles from browsing without erasing your list.</p>"#,
+            r#"{}<section class="panel vega-deck" aria-labelledby="vega-title"><div class="vega-deck-head"><span class="dock-signal" aria-hidden="true">{}</span><div><p class="overline">VEGA EXTENSION SOURCE</p><h2 id="vega-title">Zenda-Cross</h2><p>Connect your own Vega-compatible stream bridge. A GitHub repository lists extensions; it does not serve playable videos.</p></div></div><div id="vega-connection"></div></section><div class="panel-head"><h2>Direct media sources</h2><button class="btn gold small" data-act="edit-provider">{} Add provider</button></div><div class="panel">{rows}</div><p class="fine">Tests run from your browser. An unreachable host or a CORS restriction is reported, never assumed connected. Disabling a source removes its titles from browsing without erasing your list.</p>"#,
             head(
                 "CONTROL ROOM",
                 "Providers",
-                "Manage the authorized media sources in your library."
+                "Manage extensions and authorized media links in one place."
             ),
+            icon("spark"),
             icon("plus")
         )
     }
     fn settings_page(&self) -> String {
         let toggles=[("splash","Opening animation","Show the creator’s opening credits once per session.",self.splash,"spark"),("autoplay","Auto-play next episode","Continue to the next available episode when one ends.",self.autoplay,"play")].iter().fold(String::new(), |mut out, (key,title,copy,on,ic)| {write!(out,r#"<div class="setting-row"><span class="setting-ico">{}</span><div><h3>{title}</h3><p>{copy}</p></div><button class="switch" role="switch" aria-label="{title}" aria-checked="{on}" data-act="pref" data-key="{key}"></button></div>"#,icon(ic)).unwrap(); out});
         format!(
-            r##"{}<div class="panel settings-panel">{toggles}<div class="setting-row"><span class="setting-ico">{}</span><div><h3>Theme</h3><p>Choose your cinema palette.</p></div><select aria-label="Theme" id="theme">{}{}</select></div><div class="setting-row"><span class="setting-ico">{}</span><div><h3>Playback history</h3><p>Remove watch positions and recently watched titles.</p></div><button class="btn subtle small" data-act="clear-history">Clear history</button></div><a class="setting-row" href="#providers"><span class="setting-ico">{}</span><div><h3>Providers</h3><p>Connect, test and manage your media sources.</p></div>{}</a></div>"##,
+            r##"{}<div class="panel settings-panel">{toggles}<div class="setting-row"><span class="setting-ico">{}</span><div><h3>Theme</h3><p>Choose your cinema palette.</p></div><select aria-label="Theme" id="theme">{}{}{}{}</select></div><div class="setting-row"><span class="setting-ico">{}</span><div><h3>Playback history</h3><p>Remove watch positions and recently watched titles.</p></div><button class="btn subtle small" data-act="clear-history">Clear history</button></div><a class="setting-row" href="#providers"><span class="setting-ico">{}</span><div><h3>Providers</h3><p>Connect, test and manage your media sources.</p></div>{}</a></div>"##,
             head(
                 "YOUR EXPERIENCE",
                 "Settings",
                 "Your preferences stay in this browser. No account needed."
             ),
             icon("sun"),
-            opt("cinema", "Cinema gold", &self.theme),
+            opt("cinema", "Dark", &self.theme),
+            opt("light", "Light", &self.theme),
+            opt("matrix", "Matrix", &self.theme),
             opt("midnight", "Midnight blue", &self.theme),
             icon("history"),
             icon("link"),

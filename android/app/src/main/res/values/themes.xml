@@ -1,13 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.ZeeFlix" parent="Theme.Material3.Dark.NoActionBar">
-        <item name="colorPrimary">@color/zf_accent</item>
-        <item name="colorOnPrimary">@color/zf_accent_ink</item>
-        <item name="colorSurface">@color/zf_surface</item>
-        <item name="colorOnSurface">@color/zf_text</item>
-        <item name="android:windowBackground">@color/zf_bg</item>
-        <item name="android:statusBarColor">@color/zf_bg</item>
-        <item name="android:navigationBarColor">@color/zf_surface</item>
+        <item name="zfBackground">@color/zf_bg</item>
+        <item name="zfSurface">@color/zf_surface</item>
+        <item name="zfText">@color/zf_text</item>
+        <item name="zfMuted">@color/zf_muted</item>
+        <item name="zfAccent">@color/zf_accent</item>
+        <item name="zfAccentInk">@color/zf_accent_ink</item>
+        <item name="zfGlassEdge">@color/zf_glass_stroke</item>
+        <item name="zfGlassFill">#E624423C</item>
+        <item name="zfBad">@color/zf_bad</item>
+        <item name="zfOk">@color/zf_ok</item>
+        <item name="colorPrimary">?attr/zfAccent</item>
+        <item name="colorOnPrimary">?attr/zfAccentInk</item>
+        <item name="colorSurface">?attr/zfSurface</item>
+        <item name="colorOnSurface">?attr/zfText</item>
+        <item name="colorOnSurfaceVariant">?attr/zfMuted</item>
+        <item name="colorSecondaryContainer">?attr/zfGlassFill</item>
+        <item name="colorOnSecondaryContainer">?attr/zfText</item>
+        <item name="android:windowBackground">?attr/zfBackground</item>
+        <item name="android:statusBarColor">?attr/zfBackground</item>
+        <item name="android:navigationBarColor">?attr/zfSurface</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+    <style name="Theme.ZeeFlix.Light" parent="Theme.Material3.Light.NoActionBar">
+        <item name="zfBackground">#EDF3FA</item>
+        <item name="zfSurface">#F8FAFF</item>
+        <item name="zfText">#141E33</item>
+        <item name="zfMuted">#475973</item>
+        <item name="zfAccent">#195D6E</item>
+        <item name="zfAccentInk">#FFFFFF</item>
+        <item name="zfGlassEdge">#5A6484A8</item>
+        <item name="zfGlassFill">#EAF5FCFF</item>
+        <item name="zfBad">#9B2C13</item>
+        <item name="zfOk">#126244</item>
+        <item name="colorPrimary">?attr/zfAccent</item>
+        <item name="colorOnPrimary">?attr/zfAccentInk</item>
+        <item name="colorSurface">?attr/zfSurface</item>
+        <item name="colorOnSurface">?attr/zfText</item>
+        <item name="colorOnSurfaceVariant">?attr/zfMuted</item>
+        <item name="colorSecondaryContainer">?attr/zfGlassFill</item>
+        <item name="colorOnSecondaryContainer">?attr/zfText</item>
+        <item name="android:windowBackground">?attr/zfBackground</item>
+        <item name="android:statusBarColor">?attr/zfBackground</item>
+        <item name="android:navigationBarColor">?attr/zfSurface</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+
+    <style name="Theme.ZeeFlix.Matrix" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="zfBackground">#030B07</item>
+        <item name="zfSurface">#09170E</item>
+        <item name="zfText">#E6FFF0</item>
+        <item name="zfMuted">#A3C3A8</item>
+        <item name="zfAccent">#75FF96</item>
+        <item name="zfAccentInk">#07210E</item>
+        <item name="zfGlassEdge">#5075FF96</item>
+        <item name="zfGlassFill">#E41C3024</item>
+        <item name="zfBad">@color/zf_bad</item>
+        <item name="zfOk">@color/zf_ok</item>
+        <item name="colorPrimary">?attr/zfAccent</item>
+        <item name="colorOnPrimary">?attr/zfAccentInk</item>
+        <item name="colorSurface">?attr/zfSurface</item>
+        <item name="colorOnSurface">?attr/zfText</item>
+        <item name="colorOnSurfaceVariant">?attr/zfMuted</item>
+        <item name="colorSecondaryContainer">?attr/zfGlassFill</item>
+        <item name="colorOnSecondaryContainer">?attr/zfText</item>
+        <item name="android:windowBackground">?attr/zfBackground</item>
+        <item name="android:statusBarColor">?attr/zfBackground</item>
+        <item name="android:navigationBarColor">?attr/zfSurface</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+    <style name="Theme.ZeeFlix.Midnight" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="zfBackground">@color/zf_midnight_bg</item>
+        <item name="zfSurface">@color/zf_midnight_surface</item>
+        <item name="zfText">@color/zf_text</item>
+        <item name="zfMuted">@color/zf_muted</item>
+        <item name="zfAccent">@color/zf_midnight_accent</item>
+        <item name="zfAccentInk">#0E192A</item>
+        <item name="zfGlassEdge">#509EC6FF</item>
+        <item name="zfGlassFill">#E5263852</item>
+        <item name="zfBad">@color/zf_bad</item>
+        <item name="zfOk">@color/zf_ok</item>
+        <item name="colorPrimary">?attr/zfAccent</item>
+        <item name="colorOnPrimary">?attr/zfAccentInk</item>
+        <item name="colorSurface">?attr/zfSurface</item>
+        <item name="colorOnSurface">?attr/zfText</item>
+        <item name="colorOnSurfaceVariant">?attr/zfMuted</item>
+        <item name="colorSecondaryContainer">?attr/zfGlassFill</item>
+        <item name="colorOnSecondaryContainer">?attr/zfText</item>
+        <item name="android:windowBackground">?attr/zfBackground</item>
+        <item name="android:statusBarColor">?attr/zfBackground</item>
+        <item name="android:navigationBarColor">?attr/zfSurface</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 
     <style name="Theme.ZeeFlix.Splash" parent="Theme.ZeeFlix">

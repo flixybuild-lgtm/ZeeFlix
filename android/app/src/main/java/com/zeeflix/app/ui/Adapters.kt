@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
@@ -182,11 +181,11 @@ class ProviderAdapter(
         }
         holder.status.text = statusText
         val colorRes = when {
-            !row.enabled || probe?.ok == null -> R.color.zf_muted
-            probe.ok == true -> R.color.zf_ok
-            else -> R.color.zf_bad
+            !row.enabled || probe?.ok == null -> R.attr.zfMuted
+            probe.ok == true -> R.attr.zfOk
+            else -> R.attr.zfBad
         }
-        holder.status.setTextColor(ContextCompat.getColor(holder.itemView.context, colorRes))
+        holder.status.setTextColor(holder.itemView.context.themeColor(colorRes))
 
         holder.toggle.setOnCheckedChangeListener(null)
         holder.toggle.isChecked = row.enabled

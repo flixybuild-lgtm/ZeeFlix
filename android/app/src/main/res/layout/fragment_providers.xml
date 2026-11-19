@@ -3,7 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/zf_bg"
     android:orientation="vertical"
     android:padding="14dp">
 
@@ -23,15 +22,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Providers"
-                android:textColor="@color/zf_text"
+                android:textColor="?attr/zfText"
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Enter an authorized HTTPS stream. No plugins or repository URLs."
-                android:textColor="@color/zf_muted"
+                android:text="Connect a Vega bridge or add an authorized video link."
+                android:textColor="?attr/zfMuted"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -40,9 +39,19 @@
             android:layout_width="wrap_content"
             android:layout_height="42dp"
             android:text="+ Add"
-            android:textColor="@color/zf_accent_ink"
-            app:backgroundTint="@color/zf_accent" />
+            android:textColor="?attr/zfAccentInk"
+            app:backgroundTint="?attr/zfAccent" />
     </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnVegaBridge"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Zenda-Cross · Vega bridge"
+        android:textColor="?attr/zfAccent"
+        app:backgroundTint="?attr/zfGlassFill" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/providersRecycler"

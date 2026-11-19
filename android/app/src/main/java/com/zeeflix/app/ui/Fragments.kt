@@ -19,7 +19,6 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
@@ -31,6 +30,7 @@ import com.google.android.material.materialswitch.MaterialSwitch
 import com.zeeflix.app.BuildConfig
 import com.zeeflix.app.R
 import com.zeeflix.app.data.LibraryStore
+import com.zeeflix.app.databinding.DialogVegaBridgeBinding
 import com.zeeflix.app.databinding.FragmentBrowseBinding
 import com.zeeflix.app.databinding.FragmentHomeBinding
 import com.zeeflix.app.databinding.FragmentLibraryBinding
@@ -42,6 +42,9 @@ import com.zeeflix.app.model.Filter
 import com.zeeflix.app.model.Provider
 import com.zeeflix.app.model.SourceValidator
 import com.zeeflix.app.net.ProviderClient
+import com.zeeflix.app.net.VegaBridge
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -283,6 +286,7 @@ class ProvidersFragment : Fragment() {
     private var _binding: FragmentProvidersBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapter: ProviderAdapter
+    private var vegaDialog: AlertDialog? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentProvidersBinding.inflate(inflater, container, false)
@@ -324,11 +328,100 @@ class ProvidersFragment : Fragment() {
         binding.providersRecycler.layoutManager = LinearLayoutManager(requireContext())
         binding.providersRecycler.adapter = adapter
         binding.btnAddProvider.setOnClickListener { openAddDialog() }
+        binding.btnVegaBridge.setOnClickListener { showVegaBridge() }
         refresh()
     }
 
     fun openAddDialog() {
         openProviderDialog(null)
+    }
+
+    private fun showVegaBridge() {
+        val context = requireContext()
+        val store = LibraryStore.get(context)
+        val form = DialogVegaBridgeBinding.inflate(layoutInflater)
+        val dialog = AlertDialog.Builder(context)
+            .setTitle("Zenda-Cross · Vega bridge")
+            .setView(form.root)
+            .setNegativeButton("Close", null)
+            .setNeutralButton("Setup guide") { _, _ ->
+                val guide = Uri.parse("https://github.com/Ashishsri2018/vega-stremio-addon#quick-start")
+                try { startActivity(Intent(Intent.ACTION_VIEW, guide)) }
+                catch (_: android.content.ActivityNotFoundException) {
+                    Toast.makeText(context, "No browser is available.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .create()
+        var request: Job? = null
+        fun showSaved(text: String) {
+            form.bridgeUrl.setText(store.vegaBridge)
+            form.bridgeStatus.text = text
+            form.bridgeSearchPanel.visibility = if (store.vegaBridge.isBlank()) View.GONE else View.VISIBLE
+            form.bridgeResults.removeAllViews()
+        }
+        fun busy(value: Boolean) {
+            form.bridgeConnect.isEnabled = !value
+            form.bridgeSearch.isEnabled = !value
+            form.bridgeDisconnect.isEnabled = !value
+            form.bridgeTitleId.isEnabled = !value
+            form.bridgeUrl.isEnabled = !value
+        }
+        fun load(message: String, operation: suspend () -> Unit) {
+            busy(true)
+            form.bridgeStatus.text = message
+            request = viewLifecycleOwner.lifecycleScope.launch {
+                try { operation() }
+                catch (cancel: CancellationException) { throw cancel }
+                catch (error: Exception) { form.bridgeStatus.text = error.message ?: "The bridge request failed." }
+                finally { busy(false) }
+            }
+        }
+        showSaved(if (store.vegaBridge.isBlank()) "Not connected." else "Bridge saved on this device.")
+        form.bridgeConnect.setOnClickListener {
+            val url = form.bridgeUrl.text.toString()
+            load("Checking bridge manifest…") {
+                store.vegaBridge = VegaBridge.connect(url)
+                form.bridgeRights.isChecked = false
+                showSaved("Bridge connected. Enter an IMDb ID to find streams.")
+            }
+        }
+        form.bridgeDisconnect.setOnClickListener {
+            store.vegaBridge = ""
+            showSaved("Bridge disconnected.")
+        }
+        form.bridgeTitleId.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { form.bridgeResults.removeAllViews() }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+        form.bridgeSearch.setOnClickListener {
+            if (!form.bridgeRights.isChecked) {
+                form.bridgeStatus.text = "Confirm you have permission to watch this media."
+                return@setOnClickListener
+            }
+            val id = form.bridgeTitleId.text.toString().trim()
+            form.bridgeResults.removeAllViews()
+            load("Looking up streams…") {
+                val streams = VegaBridge.streams(store.vegaBridge, id)
+                form.bridgeStatus.text = if (streams.isEmpty()) "No compatible HTTPS streams found." else "${streams.size} compatible stream(s) found."
+                streams.forEach { stream ->
+                    form.bridgeResults.addView(MaterialButton(context).apply {
+                        text = if (stream.detail.isBlank()) "Watch · ${stream.name}" else "Watch · ${stream.name} — ${stream.detail}"
+                        setOnClickListener {
+                            if (form.bridgeRights.isChecked) {
+                                startActivity(Intent(context, PlayerActivity::class.java)
+                                    .putExtra("vega_stream_url", stream.url)
+                                    .putExtra("vega_stream_title", "${stream.name} · $id"))
+                                dialog.dismiss()
+                            } else form.bridgeStatus.text = "Confirm you have permission to watch this media."
+                        }
+                    })
+                }
+            }
+        }
+        dialog.setOnDismissListener { request?.cancel(); vegaDialog = null }
+        vegaDialog = dialog
+        dialog.show()
     }
 
     private fun openProviderDialog(existing: Provider?) {
@@ -341,7 +434,6 @@ class ProvidersFragment : Fragment() {
         val errText = dialogView.findViewById<TextView>(R.id.textProviderError)
 
         val formats = listOf("auto") + SourceValidator.SUPPORTED_FORMATS
-        if (existing == null) nameInput.setText("Zenda-Cross")
         formatSpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, formats.map { it.uppercase() })
         if (existing != null) {
             nameInput.setText(existing.name)
@@ -395,6 +487,7 @@ class ProvidersFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        vegaDialog?.dismiss()
         _binding = null
         super.onDestroyView()
     }
@@ -417,7 +510,12 @@ class LibraryFragment : Fragment() {
         binding.tabDownloads.setOnClickListener { showDownloads() }
         binding.tabSettings.setOnClickListener { showSettings() }
         binding.tabAbout.setOnClickListener { showAbout() }
-        binding.tabMyList.performClick()
+    }
+
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+        val selected = binding.libraryTabs.checkedChipId
+        (binding.libraryTabs.findViewById<View>(selected) ?: binding.tabMyList).performClick()
     }
 
     private fun showGrid(films: List<Film>, emptyMsg: String, showClear: Boolean = false) {
@@ -440,7 +538,7 @@ class LibraryFragment : Fragment() {
             wrap.addView(
                 TextView(requireContext()).apply {
                     text = emptyMsg
-                    setTextColor(ContextCompat.getColor(requireContext(), R.color.zf_muted))
+                    setTextColor(requireContext().themeColor(R.attr.zfMuted))
                     setPadding(8, 32, 8, 8)
                 }
             )
@@ -467,7 +565,7 @@ class LibraryFragment : Fragment() {
             list.addView(
                 TextView(requireContext()).apply {
                     text = "No downloads yet. Open an authorized film and tap Download in the player."
-                    setTextColor(ContextCompat.getColor(requireContext(), R.color.zf_muted))
+                    setTextColor(requireContext().themeColor(R.attr.zfMuted))
                 }
             )
         } else {
@@ -491,7 +589,7 @@ class LibraryFragment : Fragment() {
                 val card = TextView(requireContext()).apply {
                     text = "${rec.title} (${rec.quality}) · $statusLabel"
                     setBackgroundResource(R.drawable.bg_glass_card)
-                    setTextColor(ContextCompat.getColor(requireContext(), R.color.zf_text))
+                    setTextColor(requireContext().themeColor(R.attr.zfText))
                     setPadding(24, 24, 24, 24)
                 }
                 list.addView(card, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { bottomMargin = 16 })
@@ -511,17 +609,32 @@ class LibraryFragment : Fragment() {
                 MaterialSwitch(requireContext()).apply {
                     text = title
                     isChecked = initial
-                    setTextColor(ContextCompat.getColor(requireContext(), R.color.zf_text))
+                    setTextColor(requireContext().themeColor(R.attr.zfText))
                     setOnCheckedChangeListener { _, checked -> onChange(checked) }
                 }
             )
         }
         addToggle("Show opening splash animation", store.splashEnabled) { store.splashEnabled = it }
         addToggle("Auto-play next episode", store.autoplayEnabled) { store.autoplayEnabled = it }
-        addToggle("Midnight Blue theme (off = Cinema Gold)", store.themeName == "midnight") { midnight ->
-            store.themeName = if (midnight) "midnight" else "cinema"
-            (activity as? MainActivity)?.applyThemeColors()
-        }
+        layout.addView(MaterialButton(requireContext()).apply {
+            val current = LiquidTheme.current(requireContext())
+            text = "Theme · ${current.label}"
+            setOnClickListener {
+                val themes = LiquidTheme.entries
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Theme")
+                    .setSingleChoiceItems(themes.map { it.label }.toTypedArray(), current.ordinal) { dialog, index ->
+                        dialog.dismiss()
+                        val selected = themes[index]
+                        if (selected != current) {
+                            store.themeName = selected.key
+                            requireActivity().recreate()
+                        }
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            }
+        })
         layout.addView(
             MaterialButton(requireContext()).apply {
                 text = "Clear Playback History"
@@ -541,7 +654,7 @@ class LibraryFragment : Fragment() {
         val text = TextView(requireContext()).apply {
             setBackgroundResource(R.drawable.bg_glass_card)
             setPadding(32, 32, 32, 32)
-            setTextColor(ContextCompat.getColor(requireContext(), R.color.zf_text))
+            setTextColor(requireContext().themeColor(R.attr.zfText))
             setLineSpacing(8f, 1.15f)
             text = """
                 About Framewave

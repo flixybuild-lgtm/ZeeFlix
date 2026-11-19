@@ -44,6 +44,8 @@ impl Film {
     pub fn provider(&self) -> &str {
         if self.format == "local" {
             "Framewave Library"
+        } else if self.id == "vega-session" {
+            "Vega bridge"
         } else if self.id.starts_with("custom-") {
             "Personal provider"
         } else {
@@ -278,7 +280,7 @@ impl Provider {
             download: download && ["mp4", "webm"].contains(&format),
         })
     }
-    fn film(&self) -> Film {
+    pub(crate) fn film(&self) -> Film {
         Film {
             id: self.id.clone(),
             title: self.name.clone(),
@@ -537,12 +539,7 @@ impl App {
                 ["prefs", sp, au, th, b, l] => {
                     app.splash = *sp != "0";
                     app.autoplay = *au != "0";
-                    app.theme = if *th == "midnight" {
-                        "midnight"
-                    } else {
-                        "cinema"
-                    }
-                    .into();
+                    app.theme = theme_name(th).into();
                     app.blender = *b != "0";
                     app.local = *l != "0";
                 }
@@ -650,16 +647,19 @@ impl App {
                 "ok".into()
             }
             ["pref", "theme", value] => {
-                self.theme = if *value == "midnight" {
-                    "midnight"
-                } else {
-                    "cinema"
-                }
-                .into();
+                self.theme = theme_name(value).into();
                 "ok".into()
             }
             _ => return None,
         })
+    }
+}
+fn theme_name(raw: &str) -> &'static str {
+    match raw {
+        "light" => "light",
+        "matrix" => "matrix",
+        "midnight" => "midnight",
+        _ => "cinema", // Preserve the stored ID for Dark.
     }
 }
 fn progress(id: &str, t: &str, d: &str) -> Option<Progress> {

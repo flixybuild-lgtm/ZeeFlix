@@ -15,8 +15,8 @@
             android:layout_height="46dp"
             android:hint="Title (e.g. My Movie)"
             android:inputType="text"
-            android:textColor="@color/zf_text"
-            android:textColorHint="@color/zf_muted" />
+            android:textColor="?attr/zfText"
+            android:textColorHint="?attr/zfMuted" />
 
         <Spinner
             android:id="@+id/spinnerProviderFormat"
@@ -31,8 +31,8 @@
             android:layout_marginTop="10dp"
             android:hint="https://… (MP4, WebM, HLS, DASH, or Embed)"
             android:inputType="textUri"
-            android:textColor="@color/zf_text"
-            android:textColorHint="@color/zf_muted" />
+            android:textColor="?attr/zfText"
+            android:textColorHint="?attr/zfMuted" />
 
         <CheckBox
             android:id="@+id/checkProviderDownload"
@@ -40,21 +40,21 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:text="Allow downloads (direct MP4/WebM only)"
-            android:textColor="@color/zf_text" />
+            android:textColor="?attr/zfText" />
 
         <CheckBox
             android:id="@+id/checkProviderRights"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="I have permission to stream this media."
-            android:textColor="@color/zf_text" />
+            android:textColor="?attr/zfText" />
 
         <TextView
             android:id="@+id/textProviderError"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:textColor="@color/zf_bad"
+            android:textColor="?attr/zfBad"
             android:textSize="12sp" />
     </LinearLayout>
 </ScrollView>

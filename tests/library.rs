@@ -133,3 +133,26 @@ fn provider_crud_and_xss_escaping() {
     assert_eq!(a.command("delete\ncustom-1"), "ok");
     assert!(a.find("custom-1").is_none());
 }
+
+#[test]
+fn liquid_themes_roundtrip_and_legacy_ids_still_work() {
+    let mut app = App::default();
+    for theme in ["light", "matrix", "midnight", "cinema"] {
+        assert_eq!(app.command(&format!("pref\ntheme\n{theme}")), "ok");
+        assert_eq!(App::restore(&app.pack()).theme, theme);
+    }
+    assert_eq!(App::restore("v1\nprefs\t1\t1\tunknown\t1\t1").theme, "cinema");
+}
+
+#[test]
+fn vega_player_is_temporary_and_escapes_the_bridge_response() {
+    let mut app = App::default();
+    let before = app.pack();
+    let html = app.command("bridge-player\nExample <b>\nhttps://media.example/film.m3u8?a=b&c=d");
+    assert!(html.contains("Example &lt;b&gt;"));
+    assert!(html.contains("data-format=\"hls\""));
+    assert!(html.contains("data-download=\"false\""));
+    assert!(html.contains("href=\"#providers\""));
+    assert_eq!(app.pack(), before);
+    assert!(!app.command("bridge-player\nTest\nmedia/sintel.webm").contains("id=\"player\""));
+}

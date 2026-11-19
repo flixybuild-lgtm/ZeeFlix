@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="8dp">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Use a bridge you run or trust. GitHub repositories are extension indexes, not video sources."
+            android:textColor="?attr/zfMuted" />
+        <EditText
+            android:id="@+id/bridgeUrl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="HTTPS bridge manifest.json URL"
+            android:inputType="textUri"
+            android:maxLength="2048" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/bridgeConnect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Connect bridge" />
+        <TextView
+            android:id="@+id/bridgeStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:accessibilityLiveRegion="polite"
+            android:textColor="?attr/zfText" />
+        <LinearLayout
+            android:id="@+id/bridgeSearchPanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+            <EditText
+                android:id="@+id/bridgeTitleId"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="IMDb ID: tt1234567 or tt1234567:1:2"
+                android:inputType="textNoSuggestions"
+                android:maxLength="30"
+                android:singleLine="true" />
+            <CheckBox
+                android:id="@+id/bridgeRights"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="I have permission to watch this media." />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/bridgeSearch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Find streams" />
+            <LinearLayout
+                android:id="@+id/bridgeResults"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/bridgeDisconnect"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Disconnect" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

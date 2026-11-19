@@ -4,13 +4,22 @@
     android:id="@+id/mainRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/zf_bg">
+    android:background="?attr/zfBackground">
+
+    <com.zeeflix.app.ui.LiquidParticlesView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:importantForAccessibility="no"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <LinearLayout
         android:id="@+id/topBar"
         android:layout_width="0dp"
         android:layout_height="58dp"
-        android:background="#E6091513"
+        android:background="@drawable/bg_glass_card"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp"
@@ -30,7 +39,7 @@
             android:layout_marginStart="10dp"
             android:layout_weight="1"
             android:text="@string/app_name"
-            android:textColor="@color/zf_text"
+            android:textColor="?attr/zfText"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -42,9 +51,9 @@
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:text="Enter provider HTTPS"
-            android:textColor="@color/zf_accent"
+            android:textColor="?attr/zfAccent"
             android:textSize="12sp"
-            app:backgroundTint="#1F8bf3c9" />
+            app:backgroundTint="?attr/zfGlassFill" />
     </LinearLayout>
 
     <FrameLayout
@@ -60,9 +69,9 @@
         android:id="@+id/bottomNav"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/zf_surface"
-        app:itemIconTint="@color/zf_accent"
-        app:itemTextColor="@color/zf_text"
+        android:background="@drawable/bg_glass_card"
+        app:itemIconTint="?attr/zfAccent"
+        app:itemTextColor="?attr/zfText"
         app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

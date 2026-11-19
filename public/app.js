@@ -4,7 +4,7 @@ const $ = (s, root = document) => root.querySelector(s);
 const encoder = new TextEncoder(), decoder = new TextDecoder();
 const key = 'zeeflix:library:v1';
 let wasm, destroyPlayer, pageGeneration = 0, searchTimer, toastTimer, dismissSplash, storageWarned = false;
-let downloadsModule;
+let downloadsModule, unmountVega, bridgePlayback;
 const probeResults = new Map();
 /** Filter selections survive navigating away and back within the session. */
 const searchState = new Map();
@@ -34,7 +34,7 @@ window.__zfRouteFromPath = routeFromPath;
 /** Absolute base of the deployed app, used for share links and deep links. */
 const baseURL = () => new URL('.', document.baseURI).href;
 /** A share page lives one directory deeper; <base href> already points home. */
-function prefs() { const [splash, autoplay, theme] = call('prefs').split('\n'); document.documentElement.dataset.theme = theme; return {splash: splash === '1', autoplay: autoplay === '1'}; }
+function prefs() { const [splash, autoplay, theme] = call('prefs').split('\n'); document.documentElement.dataset.theme = theme; $('meta[name=theme-color]')?.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()); return {splash: splash === '1', autoplay: autoplay === '1'}; }
 function menu(open) { $('#profile-menu').hidden = !open; document.querySelectorAll('[data-act=profile]').forEach(b => b.setAttribute('aria-expanded', String(open))); }
 function dialog(html) { $('#dialog-content').innerHTML = html; if (!$('#dialog').open) $('#dialog').showModal(); }
 /** The Rust renderer emits `{{base}}` for links that depend on where the site is
@@ -44,9 +44,12 @@ function confirmAction(title, copy, label, action) { dialog(`<div class="confirm
 async function render(scroll = true, first = false) {
   const generation = ++pageGeneration;
   clearTimeout(searchTimer); destroyPlayer?.(); destroyPlayer = undefined; menu(false); $('#dialog').close();
+  unmountVega?.(); unmountVega = undefined;
   const r = route();
+  if (r !== 'watch/vega-session') bridgePlayback = undefined;
   // Retain the pre-rendered home when nothing needs hydration.
   if (!(first && r === 'home' && !window.__zfRestored)) $('#main').innerHTML = patchBase(call('page', r));
+  if (r === 'watch/vega-session' && bridgePlayback) $('#main').innerHTML = call('bridge-player', bridgePlayback.name, bridgePlayback.url);
   document.querySelectorAll('[data-nav]').forEach(a => { const selected = a.dataset.nav === r || (a.dataset.nav === 'categories' && r.startsWith('genre/')); a.classList.toggle('current', selected); if (selected) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
   const title = $('#main h1')?.textContent;
   document.title = r === 'home' ? 'Framewave — Cinema on your wavelength.' : `${title || 'Library'} · Framewave`;
@@ -58,7 +61,11 @@ async function render(scroll = true, first = false) {
     if (saved) for (const [sel, value] of Object.entries(saved)) { const el = $(sel); if (el) el.value = value; }
   }
   if (r === 'providers') document.querySelectorAll('[data-probe-id]').forEach(row => { const result = probeResults.get(row.dataset.probeId); if (result && !row.querySelector('[data-act=test-provider]').disabled) status(row, result); });
-  if ($('#player')) { const {mountPlayer} = await import('./player.js'); if (generation === pageGeneration) destroyPlayer = mountPlayer($('#player'), {change, toast, svg}); }
+  if ($('#vega-connection')) {
+    const {mountVega} = await import('./vega.js');
+    if (generation === pageGeneration) unmountVega = mountVega($('#vega-connection'), stream => { bridgePlayback = stream; location.hash = 'watch/vega-session'; });
+  }
+  if ($('#player')) { const {mountPlayer} = await import('./player.js'); if (generation === pageGeneration) destroyPlayer = mountPlayer($('#player'), {change: r === 'watch/vega-session' ? () => {} : change, toast, svg}); }
   if (r === 'downloads') { downloadsModule = await import('./downloads.js'); if (generation === pageGeneration) downloadsModule.paintDownloads(); }
 }
 function deliverSearch() {
