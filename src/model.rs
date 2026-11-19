@@ -349,7 +349,7 @@ impl App {
             Sort::Default => {}
             Sort::Newest => hits.sort_by_key(|f| std::cmp::Reverse(f.year.clone())),
             Sort::Oldest => hits.sort_by_key(|f| f.year.clone()),
-            Sort::Shortest => hits.sort_by_key(|f| minutes_key(f)),
+            Sort::Shortest => hits.sort_by_key(minutes_key),
             Sort::Longest => hits.sort_by_key(|f| std::cmp::Reverse(minutes_key(f))),
             Sort::Title => hits.sort_by_key(|f| sort_key(&f.title)),
         }
@@ -651,38 +651,6 @@ fn progress(id: &str, t: &str, d: &str) -> Option<Progress> {
         duration: d,
     })
 }
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn resume_thresholds() {
-        for (t, d, res) in [
-            (0, 20, false),
-            (2, 20, false),
-            (3, 20, true),
-            (16, 20, true),
-            (17, 20, false),
-            (990, 1000, false),
-        ] {
-            assert_eq!(
-                Progress {
-                    id: "x".into(),
-                    time: t,
-                    duration: d
-                }
-                .unfinished(),
-                res
-            );
-        }
-    }
-    #[test]
-    fn source_schemes() {
-        assert!(safe_source("https://example.org/video.mp4?q=123&x=4"));
-        assert!(!safe_source("https:///clip"));
-        assert!(!safe_source("media/../../x"));
-    }
-}
-
 /// Runtime in minutes for sorting; unparseable or empty values sort last.
 fn minutes_key(f: &Film) -> u32 {
     f.minutes.parse().unwrap_or(u32::MAX)
@@ -715,4 +683,37 @@ pub fn encode_component(raw: &str) -> String {
         }
     }
     out
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn resume_thresholds() {
+        for (t, d, res) in [
+            (0, 20, false),
+            (2, 20, false),
+            (3, 20, true),
+            (16, 20, true),
+            (17, 20, false),
+            (990, 1000, false),
+        ] {
+            assert_eq!(
+                Progress {
+                    id: "x".into(),
+                    time: t,
+                    duration: d
+                }
+                .unfinished(),
+                res
+            );
+        }
+    }
+    #[test]
+    fn source_schemes() {
+        assert!(safe_source("https://example.org/video.mp4?q=123&x=4"));
+        assert!(!safe_source("https:///clip"));
+        assert!(!safe_source("media/../../x"));
+    }
 }
