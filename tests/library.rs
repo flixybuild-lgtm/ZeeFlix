@@ -18,6 +18,7 @@ fn search_intersects_filters_and_ignores_case() {
         genre: "Sci-Fi",
         actor: "Derek de Lint",
         year: "2012",
+        ..Filter::default()
     };
     assert_eq!(a.search(&f)[0].id, "steel");
     assert!(a.search(&Filter { year: "2022", ..f }).is_empty());
