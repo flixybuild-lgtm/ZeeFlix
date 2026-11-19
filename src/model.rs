@@ -242,7 +242,11 @@ impl Provider {
             return Err("Use a direct HTTPS URL without credentials, or a file under media/.");
         }
         let format = if format == "auto" {
-            let path = url.split(['?', '#']).next().unwrap_or(url).to_ascii_lowercase();
+            let path = url
+                .split(['?', '#'])
+                .next()
+                .unwrap_or(url)
+                .to_ascii_lowercase();
             if safe_embed(url) {
                 "embed"
             } else if path.ends_with(".m3u8") {
