@@ -83,8 +83,8 @@ def frame(screen: Image.Image, caption: str, base: Image.Image, progress: float)
 
     d = ImageDraw.Draw(canvas)
     # header
-    d.text((34, 34), "ZeeFlix", font=font(40), fill=(246, 245, 243))
-    d.text((34, 82), "Entertainment Without Limits.", font=font(20, False), fill=(161, 163, 170))
+    d.text((34, 34), "Framewave", font=font(40), fill=(246, 245, 243))
+    d.text((34, 82), "Cinema on your wavelength.", font=font(20, False), fill=(161, 163, 170))
     for i, colour in enumerate(["#ff575b", "#ff973c", "#ffcf50", "#6bdbab", "#54bbef", "#7688ff", "#bf7efb"]):
         d.rectangle([34 + i * 26, 112, 34 + i * 26 + 24, 116], fill=colour)
     # caption

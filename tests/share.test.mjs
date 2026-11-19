@@ -41,20 +41,20 @@ test('posterFileName is filesystem-safe and keeps the title readable', () => {
   assert.equal(posterFileName('Caminandes: Llamigos'), 'Caminandes-Llamigos-poster.png');
   assert.equal(posterFileName('Cosmos Laundromat / First Cycle'), 'Cosmos-Laundromat-First-Cycle-poster.png');
   // Emoji/accent stripping must never produce an empty name.
-  assert.equal(posterFileName('🎬'), 'ZeeFlix-poster.png');
-  assert.equal(posterFileName(undefined), 'ZeeFlix-poster.png');
+  assert.equal(posterFileName('🎬'), 'Framewave-poster.png');
+  assert.equal(posterFileName(undefined), 'Framewave-poster.png');
   assert.ok(posterFileName('x'.repeat(200)).length <= 'x'.repeat(80).length + '-poster.png'.length);
 });
 
 test('share payload names the app and the film, and reads well as plain text', () => {
   const payload = sharePayload('Sintel', 'https://zeeflix.dpdns.org/#title/sintel');
-  assert.equal(payload.title, 'Sintel · ZeeFlix');
-  assert.match(payload.text, /Sintel — streaming free on ZeeFlix/);
+  assert.equal(payload.title, 'Sintel · Framewave');
+  assert.match(payload.text, /Sintel — streaming free on Framewave/);
   assert.match(payload.text, /No account, no ads, no tracking/);
   assert.equal(payload.url, 'https://zeeflix.dpdns.org/#title/sintel');
   assert.equal(
     shareText(payload),
-    'Sintel — streaming free on ZeeFlix. No account, no ads, no tracking.\nhttps://zeeflix.dpdns.org/#title/sintel',
+    'Sintel — streaming free on Framewave. No account, no ads, no tracking.\nhttps://zeeflix.dpdns.org/#title/sintel',
   );
 });
 
@@ -70,9 +70,9 @@ test('shareStrategy prefers native share, then clipboard, then legacy copy', () 
 
 test('sessionMetadata never ships an empty lock-screen card', () => {
   assert.deepEqual(sessionMetadata('Sintel'), {
-    title: 'Sintel', artist: 'ZeeFlix · Open Cinema', album: 'ZeeFlix',
+    title: 'Sintel', artist: 'Framewave · Open Cinema', album: 'Framewave',
   });
-  assert.equal(sessionMetadata('').title, 'ZeeFlix');
+  assert.equal(sessionMetadata('').title, 'Framewave');
   assert.equal(sessionMetadata(null, 'Blender').artist, 'Blender');
 });
 

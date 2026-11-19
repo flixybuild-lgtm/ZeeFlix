@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="docs/marketing/readme-hero.png" alt="ZeeFlix — Entertainment Without Limits. Free open-cinema streaming for Android and the web." width="100%">
+<img src="docs/marketing/readme-hero.png" alt="Framewave — Cinema on your wavelength. Free open-cinema streaming for Android and the web." width="100%">
 
-# ZeeFlix
+# Framewave
 
-### Entertainment Without Limits.
+### Cinema on your wavelength.
 
 **A streaming app for Android and the web — built from scratch by a 9th-class student.**
 
@@ -40,10 +40,18 @@
 
 ---
 
+## Play your own provider link
+
+Choose **Enter provider HTTPS** on Home. Paste an authorized HTTPS media URL, check the permission box and save it. The suggested display title is **Zenda-Cross**; change it for other providers. A name alone does not route playback, and a Vega plugin repository is not a video URL.
+
+Auto detects WebM, HLS, DASH and supported official embeds; other URLs use direct playback. Choose the format yourself if the link has no file extension. On Android choose **Save & Watch**; on the web select **Watch →** beside the saved provider. Saved sources can be tested, disabled, edited or removed under Providers.
+
+<img src="docs/screenshots/provider-entry-mobile.png" alt="Framewave HTTPS provider entry on the mobile web app" width="310">
+
 ## ▶️ See it move
 
 <div align="center">
-<img src="docs/marketing/demo.gif" alt="ZeeFlix app tour: home spotlight, player controls, film details, providers and downloads" width="320">
+<img src="docs/marketing/demo.gif" alt="Framewave app tour: home spotlight, player controls, film details, providers and downloads" width="320">
 </div>
 
 <sub>Ten seconds through the real app — captured with the same harness that produces every screenshot below.</sub>
@@ -53,11 +61,11 @@
 ## ✨ Why it feels different
 
 <div align="center">
-<img src="docs/marketing/social-card.png" alt="ZeeFlix desktop and mobile UI" width="100%">
+<img src="docs/marketing/social-card.png" alt="Framewave desktop and mobile UI" width="100%">
 </div>
 
 - **A real app, not a template.** Kotlin + Jetpack + **AndroidX Media3 ExoPlayer** on Android; **Rust compiled to WebAssembly** on the web. Same catalogue, same design language, two engines.
-- **Liquid-glass UI** with a seven-colour prism identity, custom poster art and the Anton / Manrope / Bebas Neue type system. Light enough to load instantly, dense enough to feel like a paid product.
+- **Screening-room UI** with a mint signal mark, custom poster art and the Anton / Manrope / Bebas Neue type system. Light enough to load instantly, dense enough to feel like a paid product.
 - **Plays almost anything.** MP4, WebM, HLS and DASH with real quality switching, subtitle tracks, audio tracks, `0.5×–2×` speed, ±10 s double-tap seeking, Picture-in-Picture and resume-where-you-left-off.
 - **Your own sources.** Add a direct video link, an HLS/DASH manifest or an official embed you are allowed to use, test the connection, then press play. Nothing is scraped, proxied or decrypted.
 - **Offline when permitted.** Authorized progressive files download through the Android `DownloadManager` with pause/resume; the web app streams with resumable byte ranges.
@@ -73,23 +81,23 @@
 
 | Home & spotlight | Player controls | Providers |
 | :---: | :---: | :---: |
-| <img src="docs/screenshots/home-mobile.png" width="230" alt="ZeeFlix mobile home with Tears of Steel spotlight"> | <img src="docs/screenshots/player-mobile.png" width="230" alt="ZeeFlix mobile player with quality and subtitle controls"> | <img src="docs/screenshots/providers-mobile.png" width="230" alt="ZeeFlix provider manager on mobile"> |
+| <img src="docs/screenshots/home-mobile.png" width="230" alt="Framewave mobile home with Tears of Steel spotlight"> | <img src="docs/screenshots/player-mobile.png" width="230" alt="Framewave mobile player with quality and subtitle controls"> | <img src="docs/screenshots/providers-mobile.png" width="230" alt="Framewave provider manager on mobile"> |
 | **Title details** | **Instant search** | **Downloads** |
-| <img src="docs/screenshots/detail-mobile.png" width="230" alt="ZeeFlix film detail page"> | <img src="docs/screenshots/search-mobile.png" width="230" alt="ZeeFlix search with genre filters"> | <img src="docs/screenshots/downloads-mobile.png" width="230" alt="ZeeFlix downloads screen"> |
+| <img src="docs/screenshots/detail-mobile.png" width="230" alt="Framewave film detail page"> | <img src="docs/screenshots/search-mobile.png" width="230" alt="Framewave search with genre filters"> | <img src="docs/screenshots/downloads-mobile.png" width="230" alt="Framewave downloads screen"> |
 
 ### Desktop
 
 | Home & spotlight carousel | Custom HTML5 / Media3 player |
 | :---: | :---: |
-| <img src="docs/screenshots/home-desktop.png" alt="ZeeFlix desktop home page"> | <img src="docs/screenshots/player-desktop.png" alt="ZeeFlix desktop player"> |
+| <img src="docs/screenshots/home-desktop.png" alt="Framewave desktop home page"> | <img src="docs/screenshots/player-desktop.png" alt="Framewave desktop player"> |
 
 | Add & test media providers | Instant search & filters |
 | :---: | :---: |
-| <img src="docs/screenshots/providers-desktop.png" alt="ZeeFlix provider manager"> | <img src="docs/screenshots/search-desktop.png" alt="ZeeFlix search page"> |
+| <img src="docs/screenshots/providers-desktop.png" alt="Framewave provider manager"> | <img src="docs/screenshots/search-desktop.png" alt="Framewave search page"> |
 
-| Film details | About ZeeFlix |
+| Film details | About Framewave |
 | :---: | :---: |
-| <img src="docs/screenshots/detail-desktop.png" alt="ZeeFlix film detail page"> | <img src="docs/screenshots/about-desktop.png" alt="About ZeeFlix page"> |
+| <img src="docs/screenshots/detail-desktop.png" alt="Framewave film detail page"> | <img src="docs/screenshots/about-desktop.png" alt="About Framewave page"> |
 
 </div>
 
@@ -127,7 +135,7 @@ gradle testDebugUnitTest assembleDebug
 # → app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Or skip the toolchain entirely: **Actions → “Publish ZeeFlix APK & Screenshots” → Run workflow.** CI builds the APK, captures fresh screenshots, renders the marketing images and attaches everything to a GitHub Release.
+Or skip the toolchain entirely: **Actions → “Publish Framewave APK & Screenshots” → Run workflow.** CI builds the APK, captures fresh screenshots, renders the marketing images and attaches everything to a GitHub Release.
 
 ---
 
@@ -174,8 +182,8 @@ Teacher: **Waqas Ashraf**
 
 <div align="center">
 
-### ⭐ If ZeeFlix made you smile, star it — that's the whole marketing budget.
+### ⭐ If Framewave made you smile, star it — that's the whole marketing budget.
 
-<sub>ZeeFlix is an independent student project. It is not affiliated with Google, the Play Store, Blender, or any film studio. Included films remain under their original Creative Commons licences; downloading a film is not a grant of new distribution rights.</sub>
+<sub>Framewave is an independent student project. It is not affiliated with Google, the Play Store, Blender, or any film studio. Included films remain under their original Creative Commons licences; downloading a film is not a grant of new distribution rights.</sub>
 
 </div>

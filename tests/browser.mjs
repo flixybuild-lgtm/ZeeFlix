@@ -18,7 +18,7 @@ function startServer() {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('Server startup timed out')), 10000);
     proc.stdout.on('data', chunk => {
-      if (chunk.toString().includes('ZeeFlix preview')) {
+      if (chunk.toString().includes('Framewave preview')) {
         clearTimeout(timer);
         resolve(proc);
       }
@@ -190,7 +190,7 @@ try {
       ['#shows', 'TV Shows'],
       ['#categories', 'Categories'],
       ['#genre/sci-fi', 'Sci-Fi'],
-      ['#about', 'About ZeeFlix'],
+      ['#about', 'About Framewave'],
       ['#nonexistent-route', 'Page not found'],
     ]) {
       await page.goto(`${BASE}/${hash}`);
@@ -203,8 +203,8 @@ try {
     await waitReady(page);
     const aboutText = await page.locator('#main').textContent();
     for (const phrase of [
-      'About ZeeFlix',
-      'ZeeFlix is a modern entertainment platform created by Zeeshan Haider, a 9th-class student at Government High School No. 1.',
+      'About Framewave',
+      'Framewave is a modern entertainment platform created by Zeeshan Haider, a 9th-class student at Government High School No. 1.',
       'The project focuses on modern technology, fast performance, smooth video playback, and a beautiful entertainment experience.',
       'CreatorZeeshan Haider',
       'Class9th Class',

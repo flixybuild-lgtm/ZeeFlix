@@ -10,7 +10,7 @@ impl App {
         let (page, arg) = route.split_once('/').unwrap_or((route, ""));
         if page == "home" || page.is_empty() {
             return format!(
-                r#"<div id="spotlight">{}</div><div class="home-body wrap"><div class="genre-bar" id="genre-bar" aria-label="Genre filters">{}</div><div id="home-feed">{}</div></div>"#,
+                r#"<div id="spotlight">{}</div><div class="home-body wrap"><section class="source-dock"><div><small>PERSONAL SCREENING ROOM</small><h2>Bring your own stream.</h2><p>Play an authorized video link. No plugins required.</p></div><button class="btn gold" data-act="edit-provider">Enter provider HTTPS ↗</button></section><div class="genre-bar" id="genre-bar" aria-label="Genre filters">{}</div><div id="home-feed">{}</div></div>"#,
                 self.hero(0),
                 self.chips("All"),
                 self.feed("All")
@@ -51,7 +51,7 @@ impl App {
                             "popular-series" => "Popular Series",
                             _ => "Trending Now",
                         },
-                        "An editorial selection from the ZeeFlix library.",
+                        "An editorial selection from the Framewave library.",
                         self.collection(arg),
                     ),
                 };
@@ -336,8 +336,9 @@ impl App {
     }
     pub fn editor(&self, id: &str) -> String {
         let p = self.providers.iter().find(|p| p.id == id);
-        let fmt = p.map_or("mp4", |p| p.format.as_str());
+        let fmt = p.map_or("auto", |p| p.format.as_str());
         let options = [
+            ("auto", "Auto · detect from URL"),
             ("mp4", "Direct video / MP4"),
             ("webm", "WebM"),
             ("hls", "HLS manifest"),
@@ -348,10 +349,10 @@ impl App {
         .map(|(v, l)| opt(v, l, fmt))
         .collect::<String>();
         format!(
-            r#"<form id="provider-form"><p class="eyebrow"><i></i>MEDIA CONNECTION</p><h2>{} provider</h2><p class="muted">Add a film you own, a public-domain title, or a stream you have permission to use.</p><input type="hidden" name="key" value="{}"><label>Display title<input name="name" required maxlength="90" placeholder="My short film" value="{}"></label><label>Source type<select name="format">{options}</select></label><label>Video or embed URL<input name="url" required maxlength="2048" placeholder="https://…" value="{}"></label><p class="fine">Use HTTPS. Embeds must be official YouTube, Vimeo or Blender player links. Do not enter credentials.</p><label class="check-label"><input type="checkbox" name="download" {}> Allow file downloads (direct video only)</label><label class="check-label"><input type="checkbox" name="rights" required> I have permission to stream this media and authorize any downloads.</label><p id="form-error" role="alert"></p><button class="btn gold" type="submit">Save provider {}</button></form>"#,
+            r#"<form id="provider-form"><p class="eyebrow"><i></i>MEDIA CONNECTION</p><h2>{} provider</h2><p class="muted">Paste a playable HTTPS link, not a plugin repository. Change the display title to match your stream.</p><input type="hidden" name="key" value="{}"><label>Display title<input name="name" required maxlength="90" placeholder="My short film" value="{}"></label><label>Source type<select name="format">{options}</select></label><label>Provider HTTPS URL<input name="url" required maxlength="2048" placeholder="https://…" value="{}"></label><p class="fine">Use HTTPS. Embeds must be official YouTube, Vimeo or Blender player links. Do not enter credentials.</p><label class="check-label"><input type="checkbox" name="download" {}> Allow file downloads (direct video only)</label><label class="check-label"><input type="checkbox" name="rights" required> I have permission to stream this media and authorize any downloads.</label><p id="form-error" role="alert"></p><button class="btn gold" type="submit">Save provider {}</button></form>"#,
             if p.is_some() { "Edit" } else { "Add" },
             p.map_or("", |p| &p.id),
-            p.map_or_else(String::new, |p| esc(&p.name)),
+            p.map_or_else(|| "Zenda-Cross".into(), |p| esc(&p.name)),
             p.map_or_else(String::new, |p| esc(&p.url)),
             if p.is_some_and(|p| p.download) {
                 "checked"
@@ -365,7 +366,7 @@ impl App {
         let mut list = vec![
             (
                 "local",
-                "ZeeFlix Library",
+                "Framewave Library",
                 "local",
                 "media/sintel.webm",
                 self.local,
@@ -387,7 +388,7 @@ impl App {
                 p.enabled,
             )
         }));
-        let rows=list.iter().fold(String::new(), |mut out, (id,name,fmt,url,on)| {let custom=id.starts_with("custom-");let edit=if custom{format!(r#"<button class="icon-btn" aria-label="Edit {}" data-act="edit-provider" data-id="{id}">{}</button><button class="icon-btn" aria-label="Delete {}" data-act="delete-provider" data-id="{id}">{}</button>"#,esc(name),icon("edit"),esc(name),icon("trash"))}else{String::new()};write!(out,r#"<div class="provider-row" data-probe-id="{id}" data-format="{fmt}" data-url="{}"><span class="setting-ico">{}</span><div class="provider-copy"><h3>{}</h3><p>{} · <span class="status" role="status">{}</span></p></div><div class="provider-acts"><button class="btn subtle small" data-act="test-provider" {}>Test</button>{edit}<button role="switch" class="switch" data-act="enable" data-id="{id}" aria-checked="{on}" aria-label="Enable {}"></button></div></div>"#,esc(url),icon("link"),esc(name),if custom{fmt.to_uppercase()}else{"Built-in".into()},if *on{"Not tested"}else{"Disabled"},if *on{""}else{"disabled"},esc(name)).unwrap(); out});
+        let rows=list.iter().fold(String::new(), |mut out, (id,name,fmt,url,on)| {let custom=id.starts_with("custom-");let watch=if custom && *on { format!(r##"<a class="text-link" href="#watch/{id}">Watch →</a>"##) } else {String::new()};let edit=if custom{format!(r#"<button class="icon-btn" aria-label="Edit {}" data-act="edit-provider" data-id="{id}">{}</button><button class="icon-btn" aria-label="Delete {}" data-act="delete-provider" data-id="{id}">{}</button>"#,esc(name),icon("edit"),esc(name),icon("trash"))}else{String::new()};write!(out,r#"<div class="provider-row" data-probe-id="{id}" data-format="{fmt}" data-url="{}"><span class="setting-ico">{}</span><div class="provider-copy"><h3>{}</h3><p>{} · <span class="status" role="status">{}</span></p></div><div class="provider-acts">{watch}<button class="btn subtle small" data-act="test-provider" {}>Test</button>{edit}<button role="switch" class="switch" data-act="enable" data-id="{id}" aria-checked="{on}" aria-label="Enable {}"></button></div></div>"#,esc(url),icon("link"),esc(name),if custom{fmt.to_uppercase()}else{"Built-in".into()},if *on{"Not tested"}else{"Disabled"},if *on{""}else{"disabled"},esc(name)).unwrap(); out});
         format!(
             r#"{}<div class="panel-head"><h2>Media sources</h2><button class="btn gold small" data-act="edit-provider">{} Add provider</button></div><div class="panel">{rows}</div><p class="fine">Tests run from your browser. An unreachable host or a CORS restriction is reported, never assumed connected. Disabling a source removes its titles from browsing without erasing your list.</p>"#,
             head(
@@ -417,7 +418,7 @@ impl App {
     }
     fn about(&self) -> String {
         format!(
-            r##"<section class="about-intro"><div class="about-glow"></div><img src="logo.svg" width="60" height="60" alt="ZeeFlix prism"><p class="eyebrow">BEHIND THE SCREEN</p><h1>About ZeeFlix</h1><p class="tagline">Entertainment Without Limits.</p></section><div class="about-grid"><section class="panel story"><p class="overline"><i></i>THE PROJECT</p><h2>A student-built cinema.</h2><p>ZeeFlix is a modern entertainment platform created by Zeeshan Haider, a 9th-class student at Government High School No. 1.</p><p>The project focuses on modern technology, fast performance, smooth video playback, and a beautiful entertainment experience.</p></section><section class="panel story"><p class="overline"><i></i>CREATOR CREDITS</p><dl class="credits-list"><div><dt>Creator</dt><dd>Zeeshan Haider</dd></div><div><dt>Class</dt><dd>9th Class</dd></div><div><dt>School</dt><dd>Government High School No. 1</dd></div><div><dt>Teacher</dt><dd>Waqas Ashraf</dd></div></dl></section><section class="panel story"><h2>Technology</h2><p>Version {} · Built with Rust, WebAssembly and HTML5 video. A pre-rendered home screen, local fonts and optimized WebP artwork keep browsing lightweight.</p></section><section class="panel story"><h2>Privacy</h2><p>No ZeeFlix accounts, analytics or tracking cookies. Lists, provider links and watch positions stay in browser storage. Playing external media contacts the selected provider, which can see your IP address.</p><a href="#settings" class="text-link">Manage preferences {}</a></section><section class="panel story"><h2>Film credits</h2><p>Our editorial collection features Blender Foundation and Blender Studio open movies. Film rights remain with their respective creators. ZeeFlix uses original illustrative key art, not official film stills.</p><a href="credits.html" class="text-link">Rights and attributions {}</a></section><section class="panel story"><h2>Contact</h2><p>No personal contact details are published. The project repository is the place to follow development and report a problem when public access is available.</p><a href="https://github.com/flixybuild-lgtm/ZeeFlix" target="_blank" rel="noopener noreferrer" class="text-link">Project repository {}</a></section></div>"##,
+            r##"<section class="about-intro"><div class="about-glow"></div><img src="logo.svg" width="60" height="60" alt="Framewave signal mark"><p class="eyebrow">BEHIND THE SCREEN</p><h1>About Framewave</h1><p class="tagline">Cinema on your wavelength.</p></section><div class="about-grid"><section class="panel story"><p class="overline"><i></i>THE PROJECT</p><h2>A student-built cinema.</h2><p>Framewave is a modern entertainment platform created by Zeeshan Haider, a 9th-class student at Government High School No. 1.</p><p>The project focuses on modern technology, fast performance, smooth video playback, and a beautiful entertainment experience.</p></section><section class="panel story"><p class="overline"><i></i>CREATOR CREDITS</p><dl class="credits-list"><div><dt>Creator</dt><dd>Zeeshan Haider</dd></div><div><dt>Class</dt><dd>9th Class</dd></div><div><dt>School</dt><dd>Government High School No. 1</dd></div><div><dt>Teacher</dt><dd>Waqas Ashraf</dd></div></dl></section><section class="panel story"><h2>Technology</h2><p>Version {} · Built with Rust, WebAssembly and HTML5 video. A pre-rendered home screen, local fonts and optimized WebP artwork keep browsing lightweight.</p></section><section class="panel story"><h2>Privacy</h2><p>No Framewave accounts, analytics or tracking cookies. Lists, provider links and watch positions stay in browser storage. Playing external media contacts the selected provider, which can see your IP address.</p><a href="#settings" class="text-link">Manage preferences {}</a></section><section class="panel story"><h2>Film credits</h2><p>Our editorial collection features Blender Foundation and Blender Studio open movies. Film rights remain with their respective creators. Framewave uses original illustrative key art, not official film stills.</p><a href="credits.html" class="text-link">Rights and attributions {}</a></section><section class="panel story"><h2>Contact</h2><p>No personal contact details are published. The project repository is the place to follow development and report a problem when public access is available.</p><a href="https://github.com/flixybuild-lgtm/ZeeFlix" target="_blank" rel="noopener noreferrer" class="text-link">Project repository {}</a></section></div>"##,
             env!("CARGO_PKG_VERSION"),
             icon("arrow"),
             icon("arrow"),

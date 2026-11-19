@@ -43,7 +43,7 @@ impl Film {
     }
     pub fn provider(&self) -> &str {
         if self.format == "local" {
-            "ZeeFlix Library"
+            "Framewave Library"
         } else if self.id.starts_with("custom-") {
             "Personal provider"
         } else {
@@ -241,6 +241,22 @@ impl Provider {
         if !safe_source(url) {
             return Err("Use a direct HTTPS URL without credentials, or a file under media/.");
         }
+        let format = if format == "auto" {
+            let path = url.split(['?', '#']).next().unwrap_or(url).to_ascii_lowercase();
+            if safe_embed(url) {
+                "embed"
+            } else if path.ends_with(".m3u8") {
+                "hls"
+            } else if path.ends_with(".mpd") {
+                "dash"
+            } else if path.ends_with(".webm") {
+                "webm"
+            } else {
+                "mp4"
+            }
+        } else {
+            format
+        };
         if !["mp4", "webm", "hls", "dash", "embed"].contains(&format) {
             return Err("Choose a supported format.");
         }
@@ -406,7 +422,7 @@ impl App {
         };
         let link = self.share_link(id, base);
         let message = format!(
-            "{} — streaming free on ZeeFlix. No account, no ads, no tracking.",
+            "{} — streaming free on Framewave. No account, no ads, no tracking.",
             film.title
         );
         let encoded = encode_component(&format!("{message}\n{link}"));

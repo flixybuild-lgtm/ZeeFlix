@@ -340,7 +340,8 @@ class ProvidersFragment : Fragment() {
         val rightsCheck = dialogView.findViewById<CheckBox>(R.id.checkProviderRights)
         val errText = dialogView.findViewById<TextView>(R.id.textProviderError)
 
-        val formats = SourceValidator.SUPPORTED_FORMATS
+        val formats = listOf("auto") + SourceValidator.SUPPORTED_FORMATS
+        if (existing == null) nameInput.setText("Zenda-Cross")
         formatSpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, formats.map { it.uppercase() })
         if (existing != null) {
             nameInput.setText(existing.name)
@@ -350,7 +351,7 @@ class ProvidersFragment : Fragment() {
         }
 
         val dialog = AlertDialog.Builder(requireContext())
-            .setTitle(if (existing == null) "Add Media Provider" else "Edit Provider")
+            .setTitle(if (existing == null) "Enter provider HTTPS" else "Edit Provider")
             .setView(dialogView)
             .setNegativeButton("Cancel", null)
             .setPositiveButton("Save & Watch", null)
@@ -384,7 +385,7 @@ class ProvidersFragment : Fragment() {
     private fun refresh() {
         val store = LibraryStore.get(requireContext())
         val rows = buildList {
-            add(ProviderRow("local", "ZeeFlix Library (Bundled Sintel)", "local", "media/sintel.webm", store.localEnabled, false))
+            add(ProviderRow("local", "Framewave Library (Bundled Sintel)", "local", "media/sintel.webm", store.localEnabled, false))
             add(ProviderRow("blender", "Blender Open Movies", "peer", "8533ea43-4271-4a57-9694-e9d0b35e1aa1", store.blenderEnabled, false))
             store.getProviders().forEach {
                 add(ProviderRow(it.id, it.name, it.format, it.url, it.enabled, true))
@@ -543,8 +544,8 @@ class LibraryFragment : Fragment() {
             setTextColor(ContextCompat.getColor(requireContext(), R.color.zf_text))
             setLineSpacing(8f, 1.15f)
             text = """
-                About ZeeFlix
-                Entertainment Without Limits.
+                About Framewave
+                Cinema on your wavelength.
 
                 ${getString(R.string.about_paragraph_1)}
 
@@ -555,8 +556,8 @@ class LibraryFragment : Fragment() {
                 School: Government High School No. 1
                 Teacher: Waqas Ashraf
 
-                Technology: Version ${BuildConfig.VERSION_NAME} · Native Android (Kotlin + Media3 ExoPlayer) paired with the ZeeFlix Rust/WebAssembly platform.
-                Privacy: No ZeeFlix accounts, analytics, or tracking cookies. Lists, providers, and watch history stay on this device.
+                Technology: Version ${BuildConfig.VERSION_NAME} · Native Android (Kotlin + Media3 ExoPlayer) paired with the Framewave Rust/WebAssembly platform.
+                Privacy: No Framewave accounts, analytics, or tracking cookies. Lists, providers, and watch history stay on this device.
                 Contact: https://github.com/flixybuild-lgtm/ZeeFlix
             """.trimIndent()
             setOnClickListener {

@@ -13,7 +13,7 @@ export function rangeDecision(response, offset, validator) {
   if (offset && (!validator || tag!==validator)) throw Error('The source changed. Restart the file.');
   return {restart:false,total:Number(r[3])};
 }
-function fileName(title, url) {return `${title.replace(/[^\p{L}\p{N} -]/gu,'').slice(0,90) || 'ZeeFlix'}${/\.webm(?:$|\?)/i.test(url)?'.webm':'.mp4'}`;}
+function fileName(title, url) {return `${title.replace(/[^\p{L}\p{N} -]/gu,'').slice(0,90) || 'Framewave'}${/\.webm(?:$|\?)/i.test(url)?'.webm':'.mp4'}`;}
 function native(job) { const a=document.createElement('a');a.href=job.url;a.download=job.name;a.target='_blank';a.rel='noopener noreferrer';a.click();job.state='Browser transfer';job.message='Progress and resume are managed by your browser or provider.';paintDownloads(); }
 function clearData(j){j.chunks=[];j.offset=0;j.validator='';j.ranges=false;}
 function allocated(){return [...jobs.values()].reduce((n,j)=>n+(j.writer?0:j.offset),0);}
