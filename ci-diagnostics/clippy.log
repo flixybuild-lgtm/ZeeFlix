@@ -1,0 +1,34 @@
+[1m[92m    Checking[0m zeeflix v1.0.0 (/home/runner/work/ZeeFlix/ZeeFlix)
+[1m[91merror[0m[1m: items after a test module[0m
+   [1m[94m--> [0msrc/model.rs:655:1
+    [1m[94m|[0m
+[1m[94m655[0m [1m[94m|[0m mod tests {
+    [1m[94m|[0m [1m[91m^^^^^^^^^[0m
+[1m[94m...[0m
+[1m[94m687[0m [1m[94m|[0m fn minutes_key(f: &Film) -> u32 {
+    [1m[94m|[0m [1m[91m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[1m[94m...[0m
+[1m[94m693[0m [1m[94m|[0m fn normalise_base(base: &str) -> String {
+    [1m[94m|[0m [1m[91m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[1m[94m...[0m
+[1m[94m707[0m [1m[94m|[0m pub fn encode_component(raw: &str) -> String {
+    [1m[94m|[0m [1m[91m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mhelp[0m: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.100.0/index.html#items_after_test_module
+    [1m[94m= [0m[1mnote[0m: `-D clippy::items-after-test-module` implied by `-D warnings`
+    [1m[94m= [0m[1mhelp[0m: to override `-D warnings` add `#[allow(clippy::items_after_test_module)]`
+    [1m[94m= [0m[1mhelp[0m: move the items to before the test module was defined
+
+[1m[91merror[0m[1m: redundant closure[0m
+   [1m[94m--> [0msrc/model.rs:352:48
+    [1m[94m|[0m
+[1m[94m352[0m [1m[94m|[0m             Sort::Shortest => hits.sort_by_key(|f| minutes_key(f)),
+    [1m[94m|[0m                                                [1m[91m^^^^^^^^^^^^^^^^^^[0m [1m[91mhelp: replace the closure with the function itself: `minutes_key`[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mhelp[0m: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.100.0/index.html#redundant_closure
+    [1m[94m= [0m[1mnote[0m: `-D clippy::redundant-closure` implied by `-D warnings`
+    [1m[94m= [0m[1mhelp[0m: to override `-D warnings` add `#[allow(clippy::redundant_closure)]`
+
+[1m[91merror[0m: could not compile `zeeflix` (lib) due to 1 previous error
+[1m[33mwarning[0m: build failed, waiting for other jobs to finish...
+[1m[91merror[0m: could not compile `zeeflix` (lib test) due to 2 previous errors
