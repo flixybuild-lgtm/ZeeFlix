@@ -1,0 +1,25 @@
+name: Rust format report
+on: [workflow_dispatch]
+permissions:
+  contents: write
+jobs:
+  fmt:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Apply rustfmt and publish the diff
+        run: |
+          cargo fmt
+          git diff > /tmp/fmt.diff
+          cat /tmp/fmt.diff
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B ci-artifacts/fmt
+          mkdir -p ci-diagnostics
+          cp /tmp/fmt.diff ci-diagnostics/fmt.diff
+          git add -f ci-diagnostics/fmt.diff
+          git commit -m "CI: rustfmt diff" || true
+          git push -f origin HEAD:refs/heads/ci-artifacts/fmt
