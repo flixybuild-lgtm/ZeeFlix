@@ -350,7 +350,11 @@ impl App {
             icon("full"),
             icon("download"),
             esc(&f.description),
-            if bridge { String::new() } else { self.credit(f) },
+            if bridge {
+                String::new()
+            } else {
+                self.credit(f)
+            },
             if f.episode > 0 {
                 self.episodes(f)
             } else {

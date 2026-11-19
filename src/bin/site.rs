@@ -48,7 +48,7 @@ fn main() {
     fs::write(out.join("sitemap.xml"), app.sitemap(&base)).unwrap();
     fs::write(
         out.join("robots.txt"),
-        format!("User-agent: *\nAllow: /\n\nSitemap: {}sitemap.xml\n", base),
+        format!("User-agent: *\nAllow: /\n\nSitemap: {base}sitemap.xml\n"),
     )
     .unwrap();
     println!("prerendered {} title pages for {base}", app.titles().len());
