@@ -60,7 +60,21 @@ jobs:
             echo "::error::cargo fmt --check failed; patch at ci-artifacts/fmt ci-diagnostics/fmt.diff"
             exit 1
           fi
-          cargo clippy --all-targets -- -D warnings
+          set +e
+          cargo clippy --all-targets -- -D warnings 2>&1 | tee /tmp/clippy.log
+          CLIPPY=${PIPESTATUS[0]}
+          set -e
+          if [ "$CLIPPY" -ne 0 ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            mkdir -p ci-diagnostics
+            cp /tmp/clippy.log ci-diagnostics/clippy.log
+            git add -f ci-diagnostics/clippy.log
+            git commit -m "CI: clippy log for ${{ github.sha }}" || true
+            git push -f origin "HEAD:refs/heads/ci-artifacts/clippy" || true
+            echo "::error::clippy failed; log at ci-artifacts/clippy ci-diagnostics/clippy.log"
+            exit 1
+          fi
 
       - name: Run Rust Unit and Integration Tests
         run: cargo test --locked
