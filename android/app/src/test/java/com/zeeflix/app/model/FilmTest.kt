@@ -41,7 +41,7 @@ class FilmTest {
 
     @Test
     fun providerNameReflectsTheSource() {
-        assertEquals("ZeeFlix Library", film(format = "local").providerName())
+        assertEquals("Framewave Library", film(format = "local").providerName())
         assertEquals("Personal provider", film(id = "custom-1", format = "mp4").providerName())
         assertEquals("Blender Open Movies", film(format = "peer").providerName())
     }

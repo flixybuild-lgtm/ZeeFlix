@@ -86,12 +86,12 @@ fn bad_state_is_bounded_and_ignored() {
 fn pages_and_episodes_are_base_relative() {
     let mut a = App::default();
     let about = a.command("page\nabout");
-    assert!(about.contains("About ZeeFlix"));
+    assert!(about.contains("About Framewave"));
     assert!(about.contains("Zeeshan Haider"));
     assert!(about.contains("9th Class"));
     assert!(about.contains("Government High School No. 1"));
     assert!(about.contains("Waqas Ashraf"));
-    assert!(about.contains("ZeeFlix is a modern entertainment platform created by Zeeshan Haider, a 9th-class student at Government High School No. 1."));
+    assert!(about.contains("Framewave is a modern entertainment platform created by Zeeshan Haider, a 9th-class student at Government High School No. 1."));
     assert!(about.contains("The project focuses on modern technology, fast performance, smooth video playback, and a beautiful entertainment experience."));
     let home = a.command("page\nhome");
     for shelf in [

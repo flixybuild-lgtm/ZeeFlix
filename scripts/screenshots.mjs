@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Captures the ZeeFlix marketing + store screenshot set into docs/screenshots/.
+ * Captures the Framewave marketing + store screenshot set into docs/screenshots/.
  *
  *   npm run build && node scripts/screenshots.mjs
  *   CHROMIUM_PATH=/tmp/chromium node scripts/screenshots.mjs
@@ -72,7 +72,7 @@ step('starting static server');
 await new Promise((resolve, reject) => {
   const timer = setTimeout(() => reject(new Error('server did not start on ' + PORT)), 15000);
   server.stdout.on('data', chunk => {
-    if (chunk.toString().includes('ZeeFlix preview')) {
+    if (chunk.toString().includes('Framewave preview')) {
       clearTimeout(timer);
       resolve();
     }
@@ -301,6 +301,12 @@ console.log('Capturing mobile (390 × 844)…');
     await write(page, 'home-mobile', { pub: true });
     await page.evaluate(() => window.scrollTo({ top: 700 }));
     await write(page, 'home-mobile-shelves', { pub: true, settle: 450 });
+  });
+  await capture('provider-entry-mobile', page, async () => {
+    await page.locator('.source-dock button').click();
+    await page.waitForSelector('#provider-form');
+    await write(page, 'provider-entry-mobile');
+    await page.keyboard.press('Escape');
   });
   await capture('player-mobile', page, async () => {
     await page.goto(`${BASE}/#watch/sintel`);

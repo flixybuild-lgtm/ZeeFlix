@@ -21,7 +21,7 @@ data class Film(
         else -> "Film"
     }
     fun providerName(): String = when {
-        format == "local" -> "ZeeFlix Library"
+        format == "local" -> "Framewave Library"
         id.startsWith("custom-") -> "Personal provider"
         else -> "Blender Open Movies"
     }
@@ -167,10 +167,18 @@ object SourceValidator {
         if (!isSafeSource(cleanUrl)) {
             return Result.failure(IllegalArgumentException("Use a direct HTTPS URL without credentials, or a file under media/."))
         }
-        if (format !in SUPPORTED_FORMATS) {
+        val path = cleanUrl.substringBefore('?').substringBefore('#').lowercase()
+        val resolved = if (format != "auto") format else when {
+            isSafeEmbed(cleanUrl) -> "embed"
+            path.endsWith(".m3u8") -> "hls"
+            path.endsWith(".mpd") -> "dash"
+            path.endsWith(".webm") -> "webm"
+            else -> "mp4"
+        }
+        if (resolved !in SUPPORTED_FORMATS) {
             return Result.failure(IllegalArgumentException("Choose a supported format."))
         }
-        if (format == "embed" && !isSafeEmbed(cleanUrl)) {
+        if (resolved == "embed" && !isSafeEmbed(cleanUrl)) {
             return Result.failure(IllegalArgumentException("Use an official YouTube, Vimeo, or Blender embed URL."))
         }
         return Result.success(
@@ -178,9 +186,9 @@ object SourceValidator {
                 id = "",
                 name = cleanName,
                 url = cleanUrl,
-                format = format,
+                format = resolved,
                 enabled = true,
-                download = allowDownload && (format == "mp4" || format == "webm")
+                download = allowDownload && (resolved == "mp4" || resolved == "webm")
             )
         )
     }

@@ -37,4 +37,4 @@ class Handler(SimpleHTTPRequestHandler):
         if len(args)>1 and str(args[1])[0] in '45':super().log_message(fmt,*args)
 if __name__=='__main__':
     if not (ROOT/'index.html').is_file():sys.exit('Run npm ci && npm run build first.')
-    port=int(os.getenv('PORT','4173'));print('ZeeFlix preview on 0.0.0.0:'+str(port),flush=True);ThreadingHTTPServer(('0.0.0.0',port),Handler).serve_forever()
+    port=int(os.getenv('PORT','4173'));print('Framewave preview on 0.0.0.0:'+str(port),flush=True);ThreadingHTTPServer(('0.0.0.0',port),Handler).serve_forever()

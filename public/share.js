@@ -20,20 +20,20 @@ export function appBase(doc = document) {
 
 /** Accessible, self-contained poster markup for <a download>. */
 export function posterFileName(title) {
-  const safe = String(title || 'ZeeFlix')
+  const safe = String(title || 'Framewave')
     .normalize('NFKD')
     .replace(/[^\w\s-]/g, '')
     .trim()
     .replace(/\s+/g, '-')
     .slice(0, 80);
-  return `${safe || 'ZeeFlix'}-poster.png`;
+  return `${safe || 'Framewave'}-poster.png`;
 }
 
 /** Share payload shared by the Web Share API and every clipboard fallback. */
 export function sharePayload(title, url) {
   return {
-    title: `${title} · ZeeFlix`,
-    text: `${title} — streaming free on ZeeFlix. No account, no ads, no tracking.`,
+    title: `${title} · Framewave`,
+    text: `${title} — streaming free on Framewave. No account, no ads, no tracking.`,
     url,
   };
 }
@@ -57,9 +57,9 @@ export function shareStrategy({ nav = {}, doc = {} } = {}) {
 /** Media Session metadata: what the OS lock screen / notification shows. */
 export function sessionMetadata(title, artist) {
   return {
-    title: String(title || 'ZeeFlix'),
-    artist: String(artist || 'ZeeFlix · Open Cinema'),
-    album: 'ZeeFlix',
+    title: String(title || 'Framewave'),
+    artist: String(artist || 'Framewave · Open Cinema'),
+    album: 'Framewave',
   };
 }
 

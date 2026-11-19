@@ -1,178 +1,72 @@
-name: Publish ZeeFlix APK & Screenshots
-
-# One button that produces everything a visitor needs:
-#   • a signed debug APK attached to a GitHub Release (stable "latest" download URL)
-#   • a fresh set of real, device-accurate screenshots
-#   • the README/store marketing images rendered from those screenshots
-# Screenshots are also pushed to the `ci-artifacts/latest` branch so a maintainer
-# can commit the approved set without downloading workflow artifacts.
+name: Publish Framewave APK & Screenshots
 on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: "Release tag to create or refresh"
+        description: 'New version tag (must match the app version)'
         type: string
-        default: "v1.0.0"
-      publish_screenshots_branch:
-        description: "Push screenshots to the ci-artifacts/latest branch"
-        type: boolean
-        default: true
-
+        required: true
+        default: v1.1.0
 permissions:
   contents: write
-
 jobs:
-  # `ubuntu-latest` now resolves to Ubuntu 26.04, which Playwright 1.55.1 does
-  # not support ("Playwright does not support chromium on ubuntu26.04-x64").
-  # Pin to 24.04 so the pinned browser build can be installed.
   publish:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
-
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: '22'
           cache: npm
-
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-
+          python-version: '3.12'
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
-
+          java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.10.2"
-
-      - name: Install Node dependencies
-        run: npm ci --ignore-scripts
-
-      # Screenshots are a nice-to-have; the APK and release are the deliverable.
-      # Each step below is therefore best-effort with an explicit log message.
-      # Must use the repo's pinned Playwright (1.55.1). A bare `npx playwright`
-      # can resolve a different version and install a browser build the pinned
-      # API cannot find ("Executable doesn't exist ... headless_shell-1193").
-      # Must use the repo's pinned Playwright (1.55.1) from node_modules, and a
-      # runner whose OS that version supports (Ubuntu 24.04). Every command is
-      # best-effort so a flaky apt mirror cannot block the browser install.
-      - name: Install Chromium for screenshots
-        id: chromium
-        continue-on-error: true
+          gradle-version: '8.10.2'
+      - name: Verify version and build web app
+        env:
+          TAG: ${{ inputs.release_tag }}
         run: |
-          mkdir -p test-results
-          PW=./node_modules/.bin/playwright
-          {
-            echo "== versions =="
-            "$PW" --version || true
-            node -p "require('playwright/package.json').version" || true
-            echo "== install-deps =="
-            sudo "$PW" install-deps chromium || echo "install-deps failed (non-fatal)"
-            echo "== install headless shell =="
-            "$PW" install chromium-headless-shell || true
-            echo "== install chromium =="
-            "$PW" install chromium || true
-            echo "== installed browsers =="
-            "$PW" install --list || true
-            ls -la ~/.cache/ms-playwright 2>/dev/null || echo "no playwright cache"
-          } 2>&1 | tee test-results/chromium-install.log
-
-      - name: Build the production web app
-        run: npm run build
-
-      - name: Capture real screenshots
-        id: screenshots
-        continue-on-error: true
-        run: node scripts/screenshots.mjs
-
-      # Turns the capture report into ::error:: annotations so a failure is
-      # readable from the Checks API without downloading logs.
-      - name: Report screenshot results
-        if: always()
+          test "$TAG" = "v$(node -p "require('./package.json').version")"
+          cargo test --locked
+          npm ci --ignore-scripts
+          npm run build
+      - name: Generate screenshots and marketing assets
         run: |
-          python3 - <<'PY'
-          import json, pathlib, sys
-          report = pathlib.Path("test-results/screenshots-report.json")
-          if not report.exists():
-              print("::error::screenshots-report.json missing — capture did not run")
-              sys.exit(0)
-          data = json.loads(report.read_text())
-          print(f"captured={data.get('captured')} failed={data.get('failed')}")
-          for item in data.get("failures", []):
-              msg = str(item.get("error", "")).replace("\n", " ")[:400]
-              print(f"::error title=Screenshot {item.get('name')}::{msg}")
-          PY
-
-      - name: Render marketing images from the screenshots
-        if: always()
-        continue-on-error: true
-        run: |
-          if ls docs/screenshots/*mobile*.png >/dev/null 2>&1; then
-            python3 -m pip install --quiet pillow fonttools brotli
-            python3 scripts/make_marketing.py
-            python3 scripts/make_demo.py
-            python3 scripts/make_qr.py
-          else
-            echo "::warning::no mobile captures present; skipping marketing render"
-          fi
-
-      - name: Build the Android APK
+          ./node_modules/.bin/playwright install --with-deps chromium
+          npm run screenshots
+          node -e "if(require('./test-results/screenshots-report.json').failed)process.exit(1)"
+          pip install pillow fonttools brotli
+          npm run marketing
+          npm run demo
+          npm run test:web
+      - name: Test, lint and assemble APK
         working-directory: android
-        run: gradle testDebugUnitTest assembleDebug --no-daemon
-
-      - name: Prepare release files
-        run: |
-          set -euo pipefail
-          mkdir -p release
-          APK=android/app/build/outputs/apk/debug/app-debug.apk
-          test -f "$APK"
-          cp "$APK" release/ZeeFlix-${{ inputs.release_tag }}-debug.apk
-          cp "$APK" release/ZeeFlix-latest.apk
-          ( cd release && sha256sum *.apk > SHA256SUMS.txt && cat SHA256SUMS.txt )
-          ls -lh release
-
-      - name: Publish the GitHub Release
+        run: gradle testDebugUnitTest lintDebug assembleDebug --no-daemon
+      - name: Publish verified build and captures
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.release_tag }}
         run: |
           set -euo pipefail
-          BODY=$(cat docs/RELEASE_NOTES_TEMPLATE.md)
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release edit "$TAG" --title "ZeeFlix $TAG — Android APK + Web" --notes "$BODY"
-          else
-            gh release create "$TAG" --title "ZeeFlix $TAG — Android APK + Web" --notes "$BODY" --target "$GITHUB_SHA"
-          fi
-          gh release upload "$TAG" release/*.apk release/SHA256SUMS.txt --clobber
-
-      - name: Publish screenshots and CI diagnostics to the artifacts branch
-        if: always()
-        run: |
-          set -euo pipefail
-          BRANCH="ci-artifacts/latest"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -B "$BRANCH"
-          mkdir -p ci-diagnostics
-          cp -f test-results/*.log ci-diagnostics/ 2>/dev/null || true
-          cp -f test-results/*.json ci-diagnostics/ 2>/dev/null || true
-          cp -f test-results/*.png ci-diagnostics/ 2>/dev/null || true
-          {
-            echo "run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-            echo "commit: $GITHUB_SHA"
-            echo "date: $(date -u +%FT%TZ)"
-            echo "captured screenshots: $(ls docs/screenshots/*.png 2>/dev/null | wc -l)"
-          } > ci-diagnostics/summary.txt
-          git add -f docs/screenshots docs/marketing public/screenshots ci-diagnostics || true
-          git commit -m "CI: artifacts for run $GITHUB_RUN_ID" || echo "nothing to commit"
-          git push -f origin "HEAD:refs/heads/$BRANCH"
-          echo "Diagnostics → $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/tree/$BRANCH/ci-diagnostics"
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          BT=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
+          "$ANDROID_HOME/build-tools/$BT/apksigner" verify "$APK"
+          mkdir release
+          cp "$APK" "release/Framewave-$TAG-debug.apk"
+          cp "$APK" release/ZeeFlix-latest.apk
+          (cd release && sha256sum *.apk > SHA256SUMS.txt)
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/screenshots docs/marketing public/screenshots
+          git diff --cached --quiet || git commit -m "Refresh Framewave screenshots for $TAG"
+          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+          gh release create "$TAG" release/* docs/screenshots/{home-desktop,provider-entry-mobile}.png --target "$(git rev-parse HEAD)" --title "Framewave $TAG — Android and web" --notes-file docs/RELEASE_NOTES_TEMPLATE.md --latest
