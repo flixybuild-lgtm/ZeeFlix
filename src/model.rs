@@ -51,12 +51,59 @@ impl Film {
         }
     }
 }
+/// Discovery sort order. `Default` preserves catalogue order so every existing
+/// route and test keeps behaving exactly as before.
+#[derive(Default, Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Sort {
+    #[default]
+    Default,
+    Newest,
+    Oldest,
+    Shortest,
+    Longest,
+    Title,
+}
+impl Sort {
+    pub fn parse(raw: &str) -> Self {
+        match raw.trim().to_lowercase().as_str() {
+            "newest" | "latest" => Self::Newest,
+            "oldest" => Self::Oldest,
+            "shortest" => Self::Shortest,
+            "longest" => Self::Longest,
+            "title" | "a-z" | "az" => Self::Title,
+            _ => Self::Default,
+        }
+    }
+    pub fn key(self) -> &'static str {
+        match self {
+            Self::Default => "default",
+            Self::Newest => "newest",
+            Self::Oldest => "oldest",
+            Self::Shortest => "shortest",
+            Self::Longest => "longest",
+            Self::Title => "title",
+        }
+    }
+}
+
+/// A ready-to-render outbound share link.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ShareTarget {
+    pub id: &'static str,
+    pub label: &'static str,
+    pub url: String,
+    pub target: &'static str,
+}
+
 #[derive(Default, Clone, Copy)]
 pub struct Filter<'a> {
     pub query: &'a str,
     pub genre: &'a str,
     pub actor: &'a str,
     pub year: &'a str,
+    /// "Movies" | "Documentaries" | "Series" | anything else == everything.
+    pub kind: &'a str,
+    pub sort: Sort,
 }
 impl Filter<'_> {
     fn matches(&self, f: &Film) -> bool {
@@ -75,7 +122,29 @@ impl Filter<'_> {
                     .split(',')
                     .any(|s| s.eq_ignore_ascii_case(self.actor)))
             && (self.year.is_empty() || f.year == self.year)
+            && Self::kind_matches(self.kind, f)
     }
+    /// Kind buckets are derived from the existing `kind()` classification, so a
+    /// documentary is never also listed as a movie.
+    fn kind_matches(kind: &str, f: &Film) -> bool {
+        match kind {
+            "Movies" => f.kind() != "Documentary" && f.episode == 0,
+            "Documentaries" => f.genre() == "Documentary",
+            "Series" => f.episode > 0,
+            _ => true,
+        }
+    }
+}
+
+/// Sort key for titles: lowercase and without a leading article, so
+/// "The Making of Sintel" files under M like a library catalogue would.
+pub fn sort_key(title: &str) -> String {
+    let lower = title.trim().to_lowercase();
+    let stripped = ["the ", "a ", "an "]
+        .iter()
+        .find_map(|prefix| lower.strip_prefix(prefix))
+        .unwrap_or(&lower);
+    stripped.to_string()
 }
 fn catalogue() -> Vec<Film> {
     include_str!("../public/catalog.tsv")
@@ -274,7 +343,117 @@ impl App {
         self.films.iter().any(|f| f.id == id) || self.providers.iter().any(|p| p.id == id)
     }
     pub fn search(&self, f: &Filter) -> Vec<Film> {
-        self.titles().into_iter().filter(|m| f.matches(m)).collect()
+        let mut hits: Vec<Film> = self.titles().into_iter().filter(|m| f.matches(m)).collect();
+        // `sort_by_key` is stable, so equal keys keep catalogue order.
+        match f.sort {
+            Sort::Default => {}
+            Sort::Newest => hits.sort_by_key(|f| std::cmp::Reverse(f.year.clone())),
+            Sort::Oldest => hits.sort_by_key(|f| f.year.clone()),
+            Sort::Shortest => hits.sort_by_key(|f| minutes_key(f)),
+            Sort::Longest => hits.sort_by_key(|f| std::cmp::Reverse(minutes_key(f))),
+            Sort::Title => hits.sort_by_key(|f| sort_key(&f.title)),
+        }
+        hits
+    }
+
+    /// "More like this": titles ranked by how many genres they share, never
+    /// including the current title and never including an unrelated one.
+    pub fn related(&self, id: &str, limit: usize) -> Vec<Film> {
+        let Some(current) = self.find(id) else {
+            return Vec::new();
+        };
+        if limit == 0 {
+            return Vec::new();
+        }
+        let genres: Vec<&str> = current.genres.split(',').map(str::trim).collect();
+        let mut scored: Vec<(usize, usize, Film)> = self
+            .titles()
+            .into_iter()
+            .filter(|m| m.id != current.id)
+            .enumerate()
+            .map(|(order, m)| {
+                let score = m
+                    .genres
+                    .split(',')
+                    .filter(|g| genres.iter().any(|x| x.eq_ignore_ascii_case(g.trim())))
+                    .count();
+                (score, order, m)
+            })
+            .filter(|(score, _, _)| *score > 0)
+            .collect();
+        scored.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
+        scored.into_iter().take(limit).map(|(_, _, m)| m).collect()
+    }
+
+    /// Canonical shareable deep link for a title, or an empty string when the
+    /// title does not exist (callers render nothing rather than a dead link).
+    pub fn share_link(&self, id: &str, base: &str) -> String {
+        if self.find(id).is_none() {
+            return String::new();
+        }
+        format!("{}#title/{}", normalise_base(base), encode_component(id))
+    }
+
+    /// Install page URL for the given deployment base.
+    pub fn install_url(&self, base: &str) -> String {
+        format!("{}install.html", normalise_base(base))
+    }
+
+    /// Outbound share destinations for one title.
+    pub fn share_targets(&self, id: &str, base: &str) -> Vec<ShareTarget> {
+        let Some(film) = self.find(id) else {
+            return Vec::new();
+        };
+        let link = self.share_link(id, base);
+        let message = format!(
+            "{} — streaming free on ZeeFlix. No account, no ads, no tracking.",
+            film.title
+        );
+        let encoded = encode_component(&format!("{message}\n{link}"));
+        let encoded_link = encode_component(&link);
+        let encoded_message = encode_component(&message);
+        vec![
+            ShareTarget {
+                id: "whatsapp",
+                label: "WhatsApp",
+                url: format!("https://wa.me/?text={encoded}"),
+                target: "_blank",
+            },
+            ShareTarget {
+                id: "x",
+                label: "X / Twitter",
+                url: format!(
+                    "https://twitter.com/intent/tweet?text={encoded_message}&url={encoded_link}"
+                ),
+                target: "_blank",
+            },
+            ShareTarget {
+                id: "telegram",
+                label: "Telegram",
+                url: format!("https://t.me/share/url?url={encoded_link}&text={encoded_message}"),
+                target: "_blank",
+            },
+            ShareTarget {
+                id: "reddit",
+                label: "Reddit",
+                url: format!(
+                    "https://www.reddit.com/submit?url={encoded_link}&title={encoded_message}"
+                ),
+                target: "_blank",
+            },
+            ShareTarget {
+                id: "facebook",
+                label: "Facebook",
+                url: format!("https://www.facebook.com/sharer/sharer.php?u={encoded_link}"),
+                target: "_blank",
+            },
+            ShareTarget {
+                id: "email",
+                label: "Email",
+                url: format!("mailto:?subject={encoded_message}&body={encoded}",),
+                target: "_blank",
+            },
+        ]
     }
     pub fn resume(&self, id: &str) -> u32 {
         self.history
@@ -502,4 +681,38 @@ mod tests {
         assert!(!safe_source("https:///clip"));
         assert!(!safe_source("media/../../x"));
     }
+}
+
+/// Runtime in minutes for sorting; unparseable or empty values sort last.
+fn minutes_key(f: &Film) -> u32 {
+    f.minutes.parse().unwrap_or(u32::MAX)
+}
+
+/// Guarantees exactly one trailing slash so links compose predictably whether the
+/// site is served from a domain root or a `/ZeeFlix/` subpath.
+fn normalise_base(base: &str) -> String {
+    let trimmed = base.trim();
+    if trimmed.is_empty() {
+        return String::new();
+    }
+    if trimmed.ends_with('/') {
+        trimmed.to_string()
+    } else {
+        format!("{trimmed}/")
+    }
+}
+
+/// Percent-encode for a query parameter (RFC 3986 unreserved set only).
+/// Hand-rolled so the Wasm build keeps zero dependencies.
+pub fn encode_component(raw: &str) -> String {
+    let mut out = String::with_capacity(raw.len());
+    for byte in raw.as_bytes() {
+        match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(*byte as char)
+            }
+            _ => out.push_str(&format!("%{byte:02X}")),
+        }
+    }
+    out
 }

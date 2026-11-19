@@ -1,5 +1,8 @@
 use crate::view::{empty, esc, genre_icon, head, icon, opt, slug};
 use crate::{App, Film, Filter, GENRES};
+
+/// Placeholder the web client replaces with the deployed base URL.
+const BASE_TOKEN: &str = "{{base}}";
 use std::fmt::Write;
 
 impl App {
@@ -213,7 +216,7 @@ impl App {
             out
         });
         format!(
-            r##"<div class="detail-backdrop" style="--art:url('art/{}.webp')"><div class="wrap"><a class="back-link" href="#movies">{} Back to library</a><div class="detail-layout"><div class="detail-poster"><img src="art/{}.webp" alt="{} key art"></div><div class="detail-info"><p class="eyebrow"><i></i>{} COLLECTION</p><h1>{}</h1><p class="lede">{}</p><div class="actions"><a href="#watch/{}" class="btn gold">{} {}</a>{}<button class="btn glass fav {}" data-act="favorite" data-id="{}" aria-label="Toggle favorite" aria-pressed="{saved}">{}</button></div><dl class="facts">{facts}</dl>{}</div></div></div></div><div class="wrap detail-more">{}</div>"##,
+            r##"<div class="detail-backdrop" style="--art:url('art/{}.webp')"><div class="wrap"><a class="back-link" href="#movies">{} Back to library</a><div class="detail-layout"><div class="detail-poster"><img src="art/{}.webp" alt="{} key art"></div><div class="detail-info"><p class="eyebrow"><i></i>{} COLLECTION</p><h1>{}</h1><p class="lede">{}</p><div class="actions"><a href="#watch/{}" class="btn gold">{} {}</a>{}<button class="btn glass fav {}" data-act="favorite" data-id="{}" aria-label="Toggle favorite" aria-pressed="{saved}">{}</button><button class="btn glass" data-act="open-share" data-id="{}" aria-label="Share this film">{}</button></div><dl class="facts">{facts}</dl>{}</div></div></div></div><div class="wrap detail-more">{}</div>"##,
             f.art,
             icon("back"),
             f.art,
@@ -232,26 +235,18 @@ impl App {
             if saved { "saved" } else { "" },
             f.id,
             icon("heart"),
+            f.id,
+            icon("link"),
             self.credit(&f),
             if f.episode > 0 {
                 self.episodes(&f)
             } else {
-                let related = self
-                    .search(&Filter {
-                        genre: f.genre(),
-                        ..Filter::default()
-                    })
-                    .into_iter()
-                    .filter(|m| m.id != id)
-                    .collect::<Vec<_>>();
-                if related.is_empty() {
-                    String::new()
-                } else {
-                    format!(
-                        "<div class=\"section-head\"><h2>More like this</h2></div>{}",
-                        self.grid(&related, false)
-                    )
-                }
+                // Ranked by shared genres instead of a single-genre dump.
+                format!(
+                    "{}{}",
+                    self.share_sheet(id, BASE_TOKEN),
+                    self.related_rail(id, 6)
+                )
             }
         )
     }
