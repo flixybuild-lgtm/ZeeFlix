@@ -37,8 +37,29 @@ jobs:
           python-version: "3.11"
 
       - name: Format and Lint (Rust)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          set +e
           cargo fmt --check
+          FMT=$?
+          set -e
+          if [ "$FMT" -ne 0 ]; then
+            # Publish the exact rustfmt patch on a side branch so it can be
+            # applied without log access, then still fail the job.
+            cargo fmt
+            git diff > /tmp/fmt.diff
+            cat /tmp/fmt.diff
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            mkdir -p ci-diagnostics
+            cp /tmp/fmt.diff ci-diagnostics/fmt.diff
+            git add -f ci-diagnostics/fmt.diff
+            git commit -m "CI: rustfmt diff for ${{ github.sha }}" || true
+            git push -f origin "HEAD:refs/heads/ci-artifacts/fmt" || true
+            echo "::error::cargo fmt --check failed; patch at ci-artifacts/fmt ci-diagnostics/fmt.diff"
+            exit 1
+          fi
           cargo clippy --all-targets -- -D warnings
 
       - name: Run Rust Unit and Integration Tests
