@@ -19,6 +19,8 @@ concurrency:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    outputs:
+      pages: ${{ steps.pages.outputs.ready }}
     steps:
       - uses: actions/checkout@v4
 
@@ -104,25 +106,29 @@ jobs:
           ! grep -rq "{{" dist/index.html dist/title/sintel.html
           echo "install + crawl surface OK"
 
-      - name: Enable GitHub Pages (first run only)
+      - name: Check whether GitHub Pages is available
+        id: pages
         if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # The site cannot deploy until Pages exists. Creating it is idempotent:
-          # a second call simply reports 409 and is ignored. Requires the workflow
-          # token to be allowed to administer Pages (repo default is write).
-          gh api --method POST "repos/${GITHUB_REPOSITORY}/pages" \
-            -f 'build_type=workflow' -f 'source[branch]=main' -f 'source[path]=/' \
-            > /dev/null 2>&1 || echo "Pages already configured or not permitted; continuing"
-          gh api "repos/${GITHUB_REPOSITORY}/pages" --jq '"pages: \(.html_url // "pending")"' || true
+          # Pages needs an owner-level setting (and a public repo on the free
+          # plan). Probe it instead of letting configure-pages fail the build:
+          # the site is still produced as a downloadable artifact either way.
+          if gh api "repos/${GITHUB_REPOSITORY}/pages" > /dev/null 2>&1; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::GitHub Pages is configured; deploying."
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::GitHub Pages is not enabled for this repository. Settings -> Pages -> Source: GitHub Actions (the repository must be public on the free plan). The built site is attached to this run as the 'github-pages' artifact."
+          fi
 
       - name: Setup Pages
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && steps.pages.outputs.ready == 'true'
         uses: actions/configure-pages@v5
 
       - name: Upload Pages Artifact
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && steps.pages.outputs.ready == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
@@ -154,7 +160,7 @@ jobs:
       # Versioned releases are published only by publish-assets.yml.
 
   deploy:
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && needs.build-and-test.outputs.pages == 'true'
     needs: build-and-test
     runs-on: ubuntu-latest
     environment:
