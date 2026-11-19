@@ -14,7 +14,8 @@ fn ids(app: &App, f: &Filter) -> Vec<String> {
 fn default_sort_stays_catalogue_order_for_backwards_compatibility() {
     let app = App::default();
     let f = Filter::default();
-    let first = |list: Vec<zeeflix::Film>| list.into_iter().take(3).map(|m| m.id).collect::<Vec<_>>();
+    let first =
+        |list: Vec<zeeflix::Film>| list.into_iter().take(3).map(|m| m.id).collect::<Vec<_>>();
     assert_eq!(first(app.search(&f)), first(app.titles()));
     assert_eq!(f.sort, Sort::Default);
 }
