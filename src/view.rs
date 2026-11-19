@@ -552,11 +552,8 @@ impl App {
 
 /// Escape a string for a JSON string literal (also keeps `</script>` harmless).
 fn json_esc(s: &str) -> String {
-    s.replace('\\', "\\\\")
+    s.replace(['\n', '\r', '\t'], " ")
+        .replace('\\', "\\\\")
         .replace('"', "\\\"")
-        .replace('\n', " ")
-        .replace('\r', " ")
-        .replace('\t', " ")
-        .replace('<', "\\u003c")
-        .replace('>', "\\u003e")
+        .replace(['<', '>'], |c| format!("\\u{:04x}", c as u32))
 }
