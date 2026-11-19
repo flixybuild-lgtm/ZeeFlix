@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import { mediaURL, peerManifest } from '../public/sources.js';
 import { sizeLabel, rangeDecision } from '../public/downloads.js';
 import { clock } from '../public/player.js';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const read = p => fs.readFileSync(path.resolve(import.meta.dirname, '..', p), 'utf8');
 
 test('mediaURL allows HTTPS and relative local media/ files, blocks insecure or credentialed URLs', () => {
   const base = 'https://flixybuild-lgtm.github.io/ZeeFlix/';
@@ -61,4 +65,14 @@ test('clock and sizeLabel format durations and file sizes accurately', () => {
   assert.equal(sizeLabel(0), 'Size not supplied');
   assert.equal(sizeLabel(3 * 1024 * 1024), '3.00 MiB');
   assert.equal(sizeLabel(35 * 1024 * 1024), '35.0 MiB');
+});
+
+test('the client hydrates a title page from the URL path, not only the hash', async () => {
+  const app = read('public/app.js');
+  assert.match(app, /routeFromPath/, 'app.js needs an explicit path -> route mapper');
+  assert.match(app, /title\//, 'app.js must recognise /title/<id> paths');
+  const share = read('public/share.js');
+  assert.match(share, /title\//, 'share.js must build /title/<id> links');
+  const site = read('src/bin/site.rs');
+  assert.match(site, /sitemap\.xml/, 'the build must emit a sitemap');
 });

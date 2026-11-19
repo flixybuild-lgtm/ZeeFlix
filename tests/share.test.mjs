@@ -6,19 +6,21 @@ import {
 } from '../public/share.js';
 
 // Deep links must survive both the GitHub Pages subpath and a custom domain root.
+// They point at a pre-rendered /title/<id>.html document so the link is readable
+// by chat unfurlers and search engines, with the hash kept for in-app routing.
 test('titleURL builds an absolute deep link under any deploy base', () => {
   assert.equal(
     titleURL('sintel', 'https://flixybuild-lgtm.github.io/ZeeFlix/'),
-    'https://flixybuild-lgtm.github.io/ZeeFlix/#title/sintel',
+    'https://flixybuild-lgtm.github.io/ZeeFlix/title/sintel.html#title/sintel',
   );
   assert.equal(
     titleURL('tears', 'https://zeeflix.dpdns.org/'),
-    'https://zeeflix.dpdns.org/#title/tears',
+    'https://zeeflix.dpdns.org/title/tears.html#title/tears',
   );
   // An existing hash or query on the base must not leak into the link.
   assert.equal(
     titleURL('spring', 'https://zeeflix.dpdns.org/app/?x=1#home'),
-    'https://zeeflix.dpdns.org/app/?x=1#title/spring',
+    'https://zeeflix.dpdns.org/app/title/spring.html#title/spring',
   );
 });
 

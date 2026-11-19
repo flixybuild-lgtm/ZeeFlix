@@ -250,7 +250,7 @@ impl App {
             }
         )
     }
-    fn unavailable(&self) -> String {
+    pub fn unavailable(&self) -> String {
         empty(
             "link",
             "Title unavailable",

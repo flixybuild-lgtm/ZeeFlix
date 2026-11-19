@@ -411,7 +411,10 @@ impl App {
         if self.find(id).is_none() {
             return String::new();
         }
-        format!("{}#title/{}", normalise_base(base), encode_component(id))
+        // The path form resolves to a pre-rendered document, so the link unfurls
+        // in chat apps and is indexable; the fragment keeps in-app routing exact.
+        let id = encode_component(id);
+        format!("{}title/{id}.html#title/{id}", normalise_base(base))
     }
 
     /// Install page URL for the given deployment base.
@@ -678,7 +681,7 @@ fn minutes_key(f: &Film) -> u32 {
 
 /// Guarantees exactly one trailing slash so links compose predictably whether the
 /// site is served from a domain root or a `/ZeeFlix/` subpath.
-fn normalise_base(base: &str) -> String {
+pub(crate) fn normalise_base(base: &str) -> String {
     let trimmed = base.trim();
     if trimmed.is_empty() {
         return String::new();

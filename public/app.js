@@ -23,9 +23,17 @@ function persist() {
 function change(...args) { const result = call(...args); persist(); return result; }
 export function toast(message) { const el = $('#toast'); el.textContent = message; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => el.hidden = true, 2600); }
 export const svg = id => `<svg class="ico" aria-hidden="true"><use href="icons.svg#${id}"></use></svg>`;
-const route = () => (location.hash.slice(1) || 'home').split('?')[0].slice(0, 150);
+/** `/title/sintel.html` (a pre-rendered share page) is the same route as `#title/sintel`. */
+function routeFromPath(pathname) {
+  const m = /\/title\/([a-z0-9][a-z0-9-]{0,63})(?:\.html)?\/?$/i.exec(pathname || '');
+  return m ? `title/${m[1].toLowerCase()}` : '';
+}
+const route = () => (location.hash.slice(1) || routeFromPath(location.pathname) || 'home').split('?')[0].slice(0, 150);
+// Also used by the share page's canonicalisation below.
+window.__zfRouteFromPath = routeFromPath;
 /** Absolute base of the deployed app, used for share links and deep links. */
 const baseURL = () => new URL('.', document.baseURI).href;
+/** A share page lives one directory deeper; <base href> already points home. */
 function prefs() { const [splash, autoplay, theme] = call('prefs').split('\n'); document.documentElement.dataset.theme = theme; return {splash: splash === '1', autoplay: autoplay === '1'}; }
 function menu(open) { $('#profile-menu').hidden = !open; document.querySelectorAll('[data-act=profile]').forEach(b => b.setAttribute('aria-expanded', String(open))); }
 function dialog(html) { $('#dialog-content').innerHTML = html; if (!$('#dialog').open) $('#dialog').showModal(); }
@@ -140,6 +148,10 @@ async function boot() {
   document.addEventListener('keydown', e => { if (e.key === 'Escape') {menu(false); dismissSplash?.();} if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.target.closest('input,select,textarea,dialog,#player')) {e.preventDefault(); if (route() !== 'search') location.hash = 'search'; else $('#query').focus();} });
   window.addEventListener('hashchange', () => {dismissSplash?.(); render();});
   await render(true, true); document.documentElement.dataset.ready = 'true';
+  // A pre-rendered /title/<id>.html page becomes a normal in-app route, so a
+  // refresh, a back-navigation or a re-share all agree on one canonical URL.
+  const fromPath = routeFromPath(location.pathname);
+  if (fromPath) { try { history.replaceState(null, '', `${baseURL()}#${fromPath}`); } catch { /* file:// */ } }
   if ('serviceWorker' in navigator && window.isSecureContext) window.addEventListener('load', registerCache, {once:true});
   if (document.readyState==='complete') registerCache();
 }

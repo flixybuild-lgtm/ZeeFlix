@@ -1,4 +1,4 @@
-use crate::{App, Film, Filter, Sort, GENRES, SPOTLIGHT};
+use crate::{normalise_base, App, Film, Filter, Sort, GENRES, SPOTLIGHT};
 use std::fmt::Write;
 pub fn esc(s: &str) -> String {
     s.replace('&', "&amp;")
@@ -432,4 +432,121 @@ impl App {
             self.results(Filter::default())
         )
     }
+    /// A self-contained, crawlable document for one title. The body is exactly
+    /// the markup the in-app router injects, so hydration cannot disagree with
+    /// what a search engine or a chat scraper first saw. Written without a
+    /// template engine: the Wasm build stays dependency-free.
+    pub fn title_document(&self, id: &str, base: &str) -> String {
+        let base = normalise_base(base);
+        let film = self.find(id);
+        let title = film.map_or("Title unavailable", |f| f.title.as_str());
+        let description = film.map_or(
+            "This title may belong to a disabled or removed provider.",
+            |f| f.description.as_str(),
+        );
+        let canonical = self.share_link(id, &base);
+        let canonical = if canonical.is_empty() {
+            format!("{base}#movies")
+        } else {
+            canonical
+        };
+        let image = film.map_or("steel-wide", |f| f.art.as_str());
+        let og_title = format!("{title} — free open film on ZeeFlix");
+        let meta = if film.is_some() {
+            let f = film.unwrap();
+            let json = format!(
+                r#"{{"@context":"https://schema.org","@type":"Movie","name":"{}","description":"{}","image":"{}art/{}.webp","datePublished":"{}","genre":"{}","url":"{}","isFamilyFriendly":true,"contentLocation":"Open cinema collection","productionCompany":{{"@type":"Organization","name":"Blender Foundation"}},"potentialAction":{{"@type":"WatchAction","target":"{}#watch/{}"}}}}"#,
+                json_esc(&f.title),
+                json_esc(&f.description),
+                base,
+                esc(&f.art),
+                json_esc(&f.year),
+                json_esc(f.genre()),
+                canonical,
+                base,
+                esc(&f.id)
+            );
+            format!(
+                r#"<meta property="og:type" content="video.movie"><meta property="og:title" content="{}"><meta property="og:description" content="{}"><meta property="og:image" content="{}art/{}.webp"><meta property="og:url" content="{}"><meta property="video:release_date" content="{}"><script type="application/ld+json">{json}</script>"#,
+                esc(&og_title),
+                esc(description),
+                base,
+                esc(&f.art),
+                esc(&canonical),
+                esc(&f.year)
+            )
+        } else {
+            r#"<meta name="robots" content="noindex"><meta property="og:type" content="website">"#
+                .to_string()
+        };
+        format!(
+            r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><base href="{}"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b0c0e"><title>{og_title}</title><meta name="description" content="{}"><link rel="canonical" href="{}"><meta property="og:site_name" content="ZeeFlix"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{}"><meta name="twitter:description" content="{}"><meta name="twitter:image" content="{}art/{}.webp">{meta}<link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="style.css"><script type="module" src="app.js"></script></head><body><main id="main" tabindex="-1">{body}</main><footer class="footer wrap"><div><a href="index.html" class="brand"><img src="logo.svg" alt="" width="28" height="28"><span>ZeeFlix</span></a><p>Entertainment Without Limits.</p></div><nav aria-label="Footer"><a href="index.html">Library</a><a href="install.html">Download</a><a href="index.html#about">About</a></nav><p class="footer-bottom"><span>Created by Zeeshan Haider</span><span class="spectrum"></span><span>Open cinema collection</span></p></footer></body></html>"#,
+            base,
+            esc(description),
+            esc(&canonical),
+            esc(&og_title),
+            esc(description),
+            base,
+            esc(&image),
+            if film.is_some() {
+                self.detail(id)
+            } else {
+                self.unavailable()
+            }
+        )
+    }
+
+    /// XML sitemap for the deployed base. Every entry is a route the client can
+    /// actually render, so crawlers never index a dead end.
+    pub fn sitemap(&self, base: &str) -> String {
+        let base = normalise_base(base);
+        let mut routes: Vec<String> = vec![
+            String::new(),
+            "#movies".into(),
+            "#shows".into(),
+            "#categories".into(),
+            "#search".into(),
+            "install.html".into(),
+            "credits.html".into(),
+            "index.html#about".into(),
+        ];
+        for f in self.titles() {
+            // Each of these is a document the build writes to disk.
+            routes.push(format!("title/{}.html", f.id));
+        }
+        for g in GENRES {
+            routes.push(format!("#genre/{}", slug(g)));
+        }
+        let mut seen = std::collections::BTreeSet::new();
+        let mut body = String::new();
+        for route in routes {
+            let loc = format!("{base}{route}");
+            if !seen.insert(loc.clone()) {
+                continue;
+            }
+            let priority = if route.is_empty() { "1.0" } else { "0.8" };
+            write!(
+                body,
+                "<url><loc>{}</loc><changefreq>weekly</changefreq><priority>{priority}</priority></url>",
+                esc(&loc)
+            )
+            .unwrap();
+        }
+        format!(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">{body}</urlset>"
+        )
+    }
+}
+
+/// Escape a string for a JSON string literal (also keeps `</script>` harmless).
+fn json_esc(s: &str) -> String {
+    s.replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('\n', " ")
+        .replace('\r', " ")
+        .replace('\t', " ")
+        .replace('<', "\\u003c")
+        .replace('>', "\\u003e")
+}
+
 }
