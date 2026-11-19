@@ -14,7 +14,8 @@ fn ids(app: &App, f: &Filter) -> Vec<String> {
 fn default_sort_stays_catalogue_order_for_backwards_compatibility() {
     let app = App::default();
     let f = Filter::default();
-    assert_eq!(app.search(&f)[..3], app.titles()[..3]);
+    let first = |list: Vec<zeeflix::Film>| list.into_iter().take(3).map(|m| m.id).collect::<Vec<_>>();
+    assert_eq!(first(app.search(&f)), first(app.titles()));
     assert_eq!(f.sort, Sort::Default);
 }
 
@@ -324,7 +325,7 @@ fn title_page_renders_a_share_sheet_and_a_ranked_related_rail() {
 
 #[test]
 fn search_page_exposes_type_and_sort_controls_and_honours_them() {
-    let app = App::default();
+    let mut app = App::default();
     let html = app.page("search");
     assert!(html.contains("id=\"kind-filter\""));
     assert!(html.contains("id=\"sort-filter\""));
@@ -355,7 +356,7 @@ fn search_page_exposes_type_and_sort_controls_and_honours_them() {
 
 #[test]
 fn share_and_related_commands_are_safe_for_bad_input() {
-    let app = App::default();
+    let mut app = App::default();
     assert!(app
         .command("share\nnope\nhttps://zeeflix.dpdns.org/")
         .is_empty());
