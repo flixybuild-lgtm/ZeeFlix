@@ -141,7 +141,10 @@ fn liquid_themes_roundtrip_and_legacy_ids_still_work() {
         assert_eq!(app.command(&format!("pref\ntheme\n{theme}")), "ok");
         assert_eq!(App::restore(&app.pack()).theme, theme);
     }
-    assert_eq!(App::restore("v1\nprefs\t1\t1\tunknown\t1\t1").theme, "cinema");
+    assert_eq!(
+        App::restore("v1\nprefs\t1\t1\tunknown\t1\t1").theme,
+        "cinema"
+    );
 }
 
 #[test]
@@ -154,5 +157,7 @@ fn vega_player_is_temporary_and_escapes_the_bridge_response() {
     assert!(html.contains("data-download=\"false\""));
     assert!(html.contains("href=\"#providers\""));
     assert_eq!(app.pack(), before);
-    assert!(!app.command("bridge-player\nTest\nmedia/sintel.webm").contains("id=\"player\""));
+    assert!(!app
+        .command("bridge-player\nTest\nmedia/sintel.webm")
+        .contains("id=\"player\""));
 }
