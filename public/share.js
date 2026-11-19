@@ -4,11 +4,19 @@
 // without a DOM. The browser-facing helpers are appended after them and are only
 // invoked from app.js, which owns every other DOM concern.
 
-/** Build the shareable URL for a hash route, preserving the deploy base path. */
+/**
+ * Build the shareable URL for a title. The path form (`/title/<id>`) is used so
+ * the link resolves to a real, pre-rendered HTML document that chat apps and
+ * search engines can read; the fragment fallback is appended for browsers that
+ * open the page from a stale cache.
+ */
 export function titleURL(id, base) {
   const root = new URL(base);
   const clean = String(id || '').trim();
   if (!/^[a-z0-9][a-z0-9-]{0,63}$/i.test(clean)) throw new Error('Unknown title id.');
+  root.pathname = `${root.pathname.replace(/\/?$/, '/')}title/${clean}.html`;
+  // A query or hash on the deploy base belongs to the page, not to the share link.
+  root.search = '';
   root.hash = `title/${clean}`;
   return root.href;
 }

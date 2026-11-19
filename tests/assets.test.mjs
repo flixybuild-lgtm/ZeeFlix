@@ -138,3 +138,25 @@ test('launch kit and release notes stay in sync with the download URL', () => {
     assert.ok(kit.includes(channel), `launch kit is missing the ${channel} section`);
   }
 });
+
+test('the build prerenders a crawlable document per title with social metadata', () => {
+  const site = read('src/bin/site.rs');
+  assert.match(site, /title_document/, 'site.rs must prerender title documents');
+  assert.match(site, /sitemap\.xml/, 'the build must write a sitemap');
+  assert.match(site, /robots\.txt/, 'the build must write a robots file');
+  // The deployment base must be configurable, or every canonical link would
+  // keep pointing at the Pages host after a custom domain is attached.
+  assert.match(site, /ZEEFLIX_BASE_URL/, 'the public base must be overridable');
+  const ci = read('.github/workflows/ci-pages.yml');
+  assert.match(ci, /vars\.ZEEFLIX_BASE_URL/, 'CI should honour a configured domain');
+  assert.match(ci, /dist\/sitemap\.xml/, 'CI must check the sitemap shipped');
+  assert.match(ci, /dist\/title\/sintel\.html/, 'CI must check a title document shipped');
+});
+
+test('no front-end module builds a share link that a crawler cannot read', () => {
+  const share = read('public/share.js');
+  assert.match(share, /title\/\$\{clean\}\.html/, 'share links must target a real document');
+  // Relative asset URLs on that deeper page must resolve from the install root.
+  const view = read('src/view.rs');
+  assert.match(view, /<base href=/, 'title documents need a <base href>');
+});

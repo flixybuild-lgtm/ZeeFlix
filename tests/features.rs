@@ -223,7 +223,10 @@ fn related_is_ranked_by_shared_genres_then_falls_back_to_the_catalogue() {
 fn share_targets_are_well_formed_and_carry_the_encoded_link() {
     let app = App::default();
     let link = app.share_link("sintel", "https://zeeflix.dpdns.org/");
-    assert_eq!(link, "https://zeeflix.dpdns.org/#title/sintel");
+    assert_eq!(
+        link, "https://zeeflix.dpdns.org/title/sintel.html#title/sintel",
+        "share links must open a pre-rendered document"
+    );
 
     let targets = app.share_targets("sintel", "https://zeeflix.dpdns.org/");
     let whatsapp = targets
@@ -235,7 +238,7 @@ fn share_targets_are_well_formed_and_carry_the_encoded_link() {
     // The deep link must be percent-encoded exactly once, not double-encoded.
     assert!(whatsapp
         .url
-        .contains("https%3A%2F%2Fzeeflix.dpdns.org%2F%23title%2Fsintel"));
+        .contains("https%3A%2F%2Fzeeflix.dpdns.org%2Ftitle%2Fsintel.html%23title%2Fsintel"));
     assert!(!whatsapp.url.contains("%253A"), "double-encoded link");
 
     let x = targets.iter().find(|t| t.id == "x").expect("x target");
@@ -370,7 +373,97 @@ fn share_and_related_commands_are_safe_for_bad_input() {
     // A base with a path and no trailing slash still composes correctly.
     assert!(app
         .command("share\nsintel\nhttps://flixybuild-lgtm.github.io/ZeeFlix")
-        .contains("https://flixybuild-lgtm.github.io/ZeeFlix/#title/sintel"));
+        .contains("https://flixybuild-lgtm.github.io/ZeeFlix/title/sintel.html#title/sintel"));
+}
+
+// ---------------------------------------------------------------------------
+// Crawlable share pages. A share link must work for people who open it from a
+// chat app, and must be describable to search engines and social scrapers.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn a_share_link_opens_a_canonical_title_page_with_social_metadata() {
+    let app = App::default();
+    let html = app.title_document("sintel", "https://zeeflix.dpdns.org/");
+    // A share link must never be a 404 for a crawler that ignores the fragment.
+    assert!(html.contains("<h1>Sintel</h1>"), "should render the title");
+    assert!(
+        html.contains(
+            r#"<link rel="canonical" href="https://zeeflix.dpdns.org/title/sintel.html#title/sintel">"#
+        ),
+        "canonical must point at the shareable fragment"
+    );
+    for need in [
+        r#"<meta property="og:type" content="video.movie">"#,
+        r#"<meta property="og:title" content="Sintel — free open film on Framewave">"#,
+        r#"<meta property="og:image" content="https://zeeflix.dpdns.org/art/sintel.webp">"#,
+        r#"<meta name="twitter:card" content="summary_large_image">"#,
+        r#"application/ld+json"#,
+        r#""@type":"Movie""#,
+        r#""datePublished":"2010""#,
+    ] {
+        assert!(html.contains(need), "metadata missing: {need}");
+    }
+    // Structured data must be valid JSON with no stray markup.
+    let start = html.find("application/ld+json").unwrap();
+    let body = &html[start..];
+    let open = start + body.find('>').unwrap() + 1;
+    let close = open + html[open..].find("</script>").unwrap();
+    let json = &html[open..close];
+    assert!(json.trim_start().starts_with('{') && json.trim_end().ends_with('}'));
+    assert!(!json.contains('<'), "JSON-LD must not contain markup");
+}
+
+#[test]
+fn an_unknown_share_id_renders_a_recoverable_page_not_a_dead_end() {
+    let app = App::default();
+    let html = app.title_document("does-not-exist", "https://zeeflix.dpdns.org/");
+    assert!(
+        html.contains("Title unavailable") || html.contains("noindex"),
+        "an unknown id must not be indexed as a real film"
+    );
+    assert!(
+        html.contains(r##"href="#movies""##),
+        "must offer a way back into the library"
+    );
+}
+
+#[test]
+fn the_sitemap_lists_the_library_and_every_title_once() {
+    let app = App::default();
+    let base = "https://zeeflix.dpdns.org";
+    let xml = app.sitemap(base);
+    assert!(xml.starts_with("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"));
+    assert!(xml.trim_end().ends_with("</urlset>"));
+    assert_eq!(xml.matches("<url>").count(), xml.matches("</url>").count());
+    assert!(xml.contains(&format!("<loc>{base}/</loc>")));
+    // One <loc> per route, no duplicates.
+    let locs: Vec<&str> = xml
+        .split("<loc>")
+        .skip(1)
+        .map(|s| s.split("</loc>").next().unwrap())
+        .collect();
+    let mut unique = locs.clone();
+    unique.sort_unstable();
+    unique.dedup();
+    assert_eq!(locs.len(), unique.len(), "sitemap has duplicate urls");
+    assert!(xml.contains(&format!("<loc>{base}/title/sintel.html</loc>")));
+    // Depth: the library plus every advertised route.
+    assert!(locs.len() >= app.titles().len() + 5, "sitemap is too thin");
+    // A base with a trailing slash must not double up.
+    assert_eq!(app.sitemap(&format!("{base}/")), xml);
+}
+
+#[test]
+fn the_title_document_is_the_prerendered_page_plus_head_tags() {
+    let app = App::default();
+    let base = "https://zeeflix.dpdns.org/";
+    let doc = app.title_document("spring", base);
+    // The body is the same markup the in-app router injects, so hydration agrees.
+    assert!(doc.contains(&app.page("title/spring")));
+    // Titles are escaped where they appear in attributes.
+    let doc = app.title_document("spring", base);
+    assert_eq!(doc.matches("<h1>").count(), 1, "one H1 per share page");
 }
 
 #[test]

@@ -38,18 +38,53 @@ jobs:
 
       - name: Format and Lint (Rust)
         run: |
-          cargo fmt --check
-          cargo clippy --all-targets -- -D warnings
+          # Surface the actual diagnostics in the check annotation: the runner
+          # log is not readable from every client, but annotations always are.
+          report() { grep -E "^(error|warning: unused)" -A6 "$1" | head -n 60 | sed -E "s/^/::error::/" || true; }
+          if ! cargo fmt --check > /tmp/fmt.log 2>&1; then
+            # rustfmt prints a diff, not "error:" lines, so annotate it verbatim.
+            head -n 200 /tmp/fmt.log | sed -E "s/^/::error::/"
+            exit 1
+          fi
+          if ! cargo clippy --all-targets --locked -- -D warnings > /tmp/clippy.log 2>&1; then
+            grep -vE "^(\s+(Checking|Compiling|Finished))" /tmp/clippy.log | head -n 120 | sed -E "s/^/::error::/"
+            echo "::error::clippy failed"
+            exit 1
+          fi
 
       - name: Run Rust Unit and Integration Tests
-        run: cargo test --locked
+        run: |
+          if ! cargo test --locked > /tmp/test.log 2>&1; then
+            grep -E "^(error|failures:|---- |thread )" -A10 /tmp/test.log | head -n 200 | sed -E "s/^/::error::/" || true
+            exit 1
+          fi
 
       - name: Install Node Dependencies and Test Web Modules
         run: |
           npm ci --ignore-scripts
           npm run test:web
 
+      - name: Resolve the public base URL
+        id: base
+        run: |
+          # A custom domain wins; otherwise Pages serves the repo subpath. The
+          # value flows into canonical links, Open Graph tags and the sitemap.
+          PAGES_URL="${{ vars.ZEEFLIX_BASE_URL }}"
+          if [ -z "$PAGES_URL" ]; then
+            if [ -f public/CNAME ]; then
+              PAGES_URL="https://$(head -1 public/CNAME | tr -d '[:space:]')/"
+            else
+              PAGES_URL="${{ github.event.repository.html_url }}"
+              PAGES_URL="${PAGES_URL%.git}"
+              PAGES_URL="$(echo "$PAGES_URL" | sed -E 's#https://github.com/([^/]+)/([^/]+)#https://\1.github.io/\2/#')"
+            fi
+          fi
+          echo "url=$PAGES_URL" >> "$GITHUB_OUTPUT"
+          echo "public base: $PAGES_URL"
+
       - name: Build Production Static Site
+        env:
+          ZEEFLIX_BASE_URL: ${{ steps.base.outputs.url }}
         run: npm run build
 
       - name: Verify the install page and marketing assets shipped
@@ -58,7 +93,16 @@ jobs:
           test -f dist/install-qr.png
           test -f dist/screenshots/app-home.webp
           grep -q "ZeeFlix-latest.apk" dist/install.html
-          echo "install surface OK"
+          # Crawlable surface: a sitemap, a robots file, and one document per title.
+          test -f dist/sitemap.xml
+          test -f dist/robots.txt
+          test -f dist/title/sintel.html
+          test "$(ls dist/title | wc -l)" -ge 10
+          grep -q "og:image" dist/index.html
+          grep -q "application/ld+json" dist/index.html
+          grep -q "canonical" dist/title/sintel.html
+          ! grep -rq "{{" dist/index.html dist/title/sintel.html
+          echo "install + crawl surface OK"
 
       - name: Setup Pages
         if: github.event_name != 'pull_request'
