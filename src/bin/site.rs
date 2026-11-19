@@ -5,6 +5,7 @@ fn main() {
     fs::create_dir_all(&out).unwrap();
     let mut page = include_str!("../../templates/index.html")
         .replace("{{home}}", &App::default().page("home"));
+    page = page.replace("{{base}}", "/");
     while let Some(start) = page.find("{{icon:") {
         let end = start + page[start..].find("}}").unwrap();
         let i = icon(&page[start + 7..end]);
