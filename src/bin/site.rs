@@ -16,9 +16,11 @@ fn main() {
     fs::create_dir_all(&out).unwrap();
     let app = App::default();
     let base = base();
-    let mut page = include_str!("../../templates/index.html")
-        .replace("{{home}}", &app.page("home"));
-    page = page.replace("{{base}}", "/").replace("{{canonical}}", &base);
+    let mut page =
+        include_str!("../../templates/index.html").replace("{{home}}", &app.page("home"));
+    page = page
+        .replace("{{base}}", "/")
+        .replace("{{canonical}}", &base);
     while let Some(start) = page.find("{{icon:") {
         let end = start + page[start..].find("}}").unwrap();
         let i = icon(&page[start + 7..end]);
