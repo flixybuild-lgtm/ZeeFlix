@@ -344,14 +344,14 @@ impl App {
     }
     pub fn search(&self, f: &Filter) -> Vec<Film> {
         let mut hits: Vec<Film> = self.titles().into_iter().filter(|m| f.matches(m)).collect();
-        // `sort_by` is stable, so equal keys keep catalogue order.
+        // `sort_by_key` is stable, so equal keys keep catalogue order.
         match f.sort {
             Sort::Default => {}
-            Sort::Newest => hits.sort_by(|a, b| b.year.cmp(&a.year)),
-            Sort::Oldest => hits.sort_by(|a, b| a.year.cmp(&b.year)),
-            Sort::Shortest => hits.sort_by(|a, b| minutes_key(a).cmp(&minutes_key(b))),
-            Sort::Longest => hits.sort_by(|a, b| minutes_key(b).cmp(&minutes_key(a))),
-            Sort::Title => hits.sort_by(|a, b| sort_key(&a.title).cmp(&sort_key(&b.title))),
+            Sort::Newest => hits.sort_by_key(|f| std::cmp::Reverse(f.year.clone())),
+            Sort::Oldest => hits.sort_by_key(|f| f.year.clone()),
+            Sort::Shortest => hits.sort_by_key(|f| minutes_key(f)),
+            Sort::Longest => hits.sort_by_key(|f| std::cmp::Reverse(minutes_key(f))),
+            Sort::Title => hits.sort_by_key(|f| sort_key(&f.title)),
         }
         hits
     }
