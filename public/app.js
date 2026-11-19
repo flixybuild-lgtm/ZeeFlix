@@ -41,7 +41,7 @@ async function render(scroll = true, first = false) {
   if (!(first && r === 'home' && !window.__zfRestored)) $('#main').innerHTML = patchBase(call('page', r));
   document.querySelectorAll('[data-nav]').forEach(a => { const selected = a.dataset.nav === r || (a.dataset.nav === 'categories' && r.startsWith('genre/')); a.classList.toggle('current', selected); if (selected) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
   const title = $('#main h1')?.textContent;
-  document.title = r === 'home' ? 'ZeeFlix — Entertainment Without Limits.' : `${title || 'Library'} · ZeeFlix`;
+  document.title = r === 'home' ? 'Framewave — Cinema on your wavelength.' : `${title || 'Library'} · Framewave`;
   if (scroll) { window.scrollTo({top: 0, behavior: 'instant'}); if (!first) $('#main').focus({preventScroll: true}); }
   if (r === 'search') $('#query')?.focus({preventScroll:true});
   // Remember the chosen filters so a back-navigation does not silently reset them.
@@ -93,7 +93,7 @@ function onClick(e) {
     case 'open-share': dialog(call('share', id, baseURL())); break;
     case 'share-native': {
       import('./share.js').then(async m => {
-        const result = await m.shareTitle(id, button.closest('.share-sheet')?.querySelector('h2')?.textContent || 'ZeeFlix');
+        const result = await m.shareTitle(id, button.closest('.share-sheet')?.querySelector('h2')?.textContent || 'Framewave');
         toast(result === 'shared' ? 'Shared' : result === 'copied' ? 'Link copied' : result === 'cancelled' ? 'Share cancelled' : 'Copy the link below to share');
       });
       break;
@@ -133,7 +133,7 @@ async function boot() {
   document.addEventListener('submit', e => {if (e.target.id !== 'provider-form') return; e.preventDefault(); const d = new FormData(e.target); const t = ['key','name','url','format'].map(k=>String(d.get(k) || '').trim());
     if (t.some(v => /[\n\r\t]/.test(v))) {$('#form-error').textContent = 'Fields must be a single line.'; return;}
     const result = change('provider', ...t, d.has('download') ? '1' : '0', d.has('rights') ? 'authorized' : '');
-    if (result !== 'ok') {$('#form-error').textContent = result; return;} probeResults.delete(t[0]); $('#dialog').close(); render(false); toast('Provider saved');
+    if (result !== 'ok') {$('#form-error').textContent = result; return;} probeResults.delete(t[0]); $('#dialog').close(); if (route() === 'home') location.hash = 'providers'; else render(false); toast('Provider saved');
   });
   document.addEventListener('input', e => {if (e.target.id === 'query') { clearTimeout(searchTimer); searchTimer = setTimeout(deliverSearch, 110); }});
   document.addEventListener('change', e => {if (e.target.closest('.filters')) deliverSearch(); if (e.target.id === 'theme') {change('pref','theme',e.target.value); prefs();} });
@@ -144,4 +144,4 @@ async function boot() {
   if (document.readyState==='complete') registerCache();
 }
 function registerCache() {if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('./sw.js').catch(() => {});}
-boot().catch(() => {const el=document.createElement('div');el.className='boot-error';el.textContent='ZeeFlix could not start. Enable WebAssembly and reload the page.';document.body.append(el);});
+boot().catch(() => {const el=document.createElement('div');el.className='boot-error';el.textContent='Framewave could not start. Enable WebAssembly and reload the page.';document.body.append(el);});

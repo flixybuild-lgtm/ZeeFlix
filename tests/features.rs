@@ -372,3 +372,19 @@ fn share_and_related_commands_are_safe_for_bad_input() {
         .command("share\nsintel\nhttps://flixybuild-lgtm.github.io/ZeeFlix")
         .contains("https://flixybuild-lgtm.github.io/ZeeFlix/#title/sintel"));
 }
+
+#[test]
+fn auto_stream_format_uses_path_not_query() {
+    use zeeflix::Provider;
+    for (url, expected) in [
+        ("https://example.org/live.M3U8?x=.mp4", "hls"),
+        ("https://example.org/live.mpd", "dash"),
+        ("https://example.org/a.webm", "webm"),
+        ("https://example.org/a.mp4", "mp4"),
+        ("https://player.vimeo.com/video/123", "embed"),
+    ] {
+        let p = Provider::new("Screening", url, "auto", true).unwrap();
+        assert_eq!(p.format, expected);
+        assert_eq!(p.download, matches!(expected, "webm" | "mp4"));
+    }
+}

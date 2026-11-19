@@ -30,7 +30,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Add a direct MP4/WebM, HLS, DASH or embed and watch immediately."
+                android:text="Enter an authorized HTTPS stream. No plugins or repository URLs."
                 android:textColor="@color/zf_muted"
                 android:textSize="12sp" />
         </LinearLayout>

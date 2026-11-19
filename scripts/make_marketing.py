@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render ZeeFlix marketing assets from the real app screenshots.
+"""Render Framewave marketing assets from the real app screenshots.
 
     python3 scripts/make_marketing.py
 
@@ -30,18 +30,14 @@ BG = (11, 12, 15)
 TEXT = (246, 245, 243)
 SOFT = (214, 211, 206)
 MUTED = (161, 163, 170)
-ACCENT = (248, 183, 79)
+ACCENT = (139, 243, 201)
 SPECTRUM = ["#ff575b", "#ff973c", "#ffcf50", "#6dbfa4", "#54bbef", "#7688ff", "#bf7efb"]
 
 # Exact geometry of public/logo.svg, scaled from its 56 × 56 viewBox.
 PRISM = [
-    ("#ff575b", [(8, 7), (32, 7), (23, 17), (4, 17)]),
-    ("#ff973c", [(32, 7), (51, 7), (42, 17), (23, 17)]),
-    ("#ffcf50", [(38, 17), (51, 17), (39, 29), (25, 29)]),
-    ("#6bdbab", [(25, 29), (39, 29), (26, 40), (12, 40)]),
-    ("#54bbef", [(12, 40), (26, 40), (17, 50), (3, 50)]),
-    ("#7688ff", [(24, 40), (38, 40), (29, 50), (15, 50)]),
-    ("#bf7efb", [(38, 40), (53, 40), (49, 50), (29, 50)]),
+    ("#8bf3c9", [(9, 35), (18, 14), (28, 14), (19, 35)]),
+    ("#8bf3c9", [(22, 42), (35, 12), (43, 12), (30, 42)]),
+    ("#a4c9ff", [(34, 39), (42, 21), (49, 29)]),
 ]
 
 
@@ -143,7 +139,7 @@ def panel(w: int, h: int, glows=((236, 147, 91, 46), (133, 162, 225, 42))) -> Im
 
 
 def prism(draw: ImageDraw.ImageDraw, xy, scale: float = 1.0):
-    """Draw the seven-colour ZeeFlix prism mark; width ≈ 56 × factor(scale)."""
+    """Draw the seven-colour Framewave signal mark mark; width ≈ 56 × factor(scale)."""
     x, y = xy
     for colour, pts in PRISM:
         draw.polygon([(x + px * factor, y + py * factor) for px, py in pts] if (factor := scale) else [], fill=colour)
@@ -227,9 +223,9 @@ def social_card():
     d = ImageDraw.Draw(card)
 
     prism(d, (78, 74), 0.86)
-    d.text((78 + 94, 74 + 6), "ZeeFlix", font=bold(46), fill=TEXT)
-    d.text((78, 186), "ENTERTAINMENT", font=display(74), fill=TEXT)
-    d.text((78, 258), "WITHOUT LIMITS.", font=display(74), fill=ACCENT)
+    d.text((78 + 94, 74 + 6), "Framewave", font=bold(46), fill=TEXT)
+    d.text((78, 186), "CINEMA ON YOUR", font=display(74), fill=TEXT)
+    d.text((78, 258), "WAVELENGTH.", font=display(74), fill=ACCENT)
     spectrum_bar(d, (80, 348), 300, 5)
     d.text((80, 380), "Open cinema for Android and the web.", font=sans(25), fill=SOFT)
     d.text((80, 416), "Free APK · no account · no ads · no tracking.", font=sans(25), fill=SOFT)
@@ -254,7 +250,7 @@ def feature_banner():
     card = panel(W, H, glows=((236, 147, 91, 62), (133, 162, 225, 54)))
     d = ImageDraw.Draw(card)
     prism(d, (96, 82), 0.8)
-    d.text((96 + 88, 82 + 4), "ZeeFlix", font=bold(42), fill=TEXT)
+    d.text((96 + 88, 82 + 4), "Framewave", font=bold(42), fill=TEXT)
     text(d, (96, 176), "A STUDENT-BUILT\nSTREAMING APP.", display(78), TEXT)
     spectrum_bar(d, (98, 392), 340, 6)
     rows = [
@@ -294,7 +290,7 @@ def store_panels():
         card = panel(W, H, glows=((236, 147, 91, 58), (133, 162, 225, 50)))
         d = ImageDraw.Draw(card)
         prism(d, (84, 78), 0.72)
-        d.text((84 + 80, 78), "ZeeFlix", font=bold(38), fill=TEXT)
+        d.text((84 + 80, 78), "Framewave", font=bold(38), fill=TEXT)
         text(d, (84, 196), caption, display(84), TEXT)
         spectrum_bar(d, (86, 330), 240, 6)
         framed = phone(load(name), 820)
@@ -320,8 +316,8 @@ def readme_hero():
     card = panel(W, H, glows=((236, 147, 91, 78), (133, 162, 225, 66)))
     d = ImageDraw.Draw(card)
     prism(d, (62, 64), 0.82)
-    d.text((62 + 92, 62), "ZeeFlix", font=bold(50), fill=TEXT)
-    d.text((64, 172), "Entertainment Without Limits.", font=display(52), fill=ACCENT)
+    d.text((62 + 92, 62), "Framewave", font=bold(50), fill=TEXT)
+    d.text((64, 172), "Cinema on your wavelength.", font=display(52), fill=ACCENT)
     spectrum_bar(d, (66, 246), 260, 5)
     x = 66
     for label in ("Android APK", "Web app", "Rust + WASM", "Kotlin + Media3"):

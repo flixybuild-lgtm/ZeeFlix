@@ -316,10 +316,10 @@ class PlayerActivity : AppCompatActivity() {
             .setMessage("Quality: ${v.label}\nSize: $sizeMb\n\nDownload for authorized offline viewing?")
             .setNegativeButton("Cancel", null)
             .setPositiveButton("Download") { _, _ ->
-                val safeName = film.title.replace(Regex("[^a-zA-Z0-9 _-]"), "").ifBlank { "ZeeFlix" } + ".mp4"
+                val safeName = film.title.replace(Regex("[^a-zA-Z0-9 _-]"), "").ifBlank { "Framewave" } + ".mp4"
                 val req = DownloadManager.Request(Uri.parse(v.downloadUrl))
                     .setTitle("${film.title} (${v.label})")
-                    .setDescription("ZeeFlix authorized download")
+                    .setDescription("Framewave authorized download")
                     .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                     .setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, safeName)
                 val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager

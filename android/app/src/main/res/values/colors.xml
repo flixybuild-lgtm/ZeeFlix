@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="zf_bg">#0B0C0F</color>
-    <color name="zf_surface">#15161A</color>
+    <color name="zf_bg">#091513</color>
+    <color name="zf_surface">#10221f</color>
     <color name="zf_surface_elevated">#1C1D22</color>
     <color name="zf_glass_stroke">#26FFFFFF</color>
     <color name="zf_glass_fill">#18FFFFFF</color>
     <color name="zf_text">#F6F5F3</color>
     <color name="zf_muted">#A1A3AA</color>
-    <color name="zf_accent">#F8B74F</color>
-    <color name="zf_accent_ink">#211706</color>
+    <color name="zf_accent">#8bf3c9</color>
+    <color name="zf_accent_ink">#062b20</color>
     <color name="zf_midnight_bg">#090F19</color>
     <color name="zf_midnight_surface">#121D2D</color>
     <color name="zf_midnight_accent">#9EC6FF</color>
     <color name="zf_ok">#96D5B1</color>
     <color name="zf_bad">#F7A58F</color>
-    <color name="zf_spectrum_1">#FF575B</color>
+    <color name="zf_spectrum_1">#56c7b0</color>
     <color name="zf_spectrum_2">#FF973C</color>
     <color name="zf_spectrum_3">#FFCF50</color>
     <color name="zf_spectrum_4">#6BDBAB</color>
     <color name="zf_spectrum_5">#54BBEF</color>
     <color name="zf_spectrum_6">#7688FF</color>
-    <color name="zf_spectrum_7">#BF7EFB</color>
+    <color name="zf_spectrum_7">#89adff</color>
 </resources>

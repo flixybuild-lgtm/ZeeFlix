@@ -32,4 +32,4 @@ self.addEventListener('install',e=>e.waitUntil(self.skipWaiting()));
 self.addEventListener('activate',e=>e.waitUntil((async()=>{for(const key of await caches.keys())if(key.startsWith(prefix)&&key!==name)await caches.delete(key);await self.clients.claim()})()));
 self.addEventListener('fetch',event=>{const r=event.request;if(r.method!=='GET'||r.headers.has('Range')||!assets.has(r.url))return;event.respondWith((async()=>{const c=await caches.open(name);const hit=await c.match(r);if(hit&&r.mode!=='navigate')return hit;try{const res=await fetch(r);if(res.ok)await c.put(r,res.clone());return res}catch(e){if(hit)return hit;throw e}})())});'''.replace('VERSION',version).replace('ASSETS',json.dumps([str(f.relative_to(OUT)) for f in assets]))
 (OUT/'sw.js').write_text(worker)
-print(f'Built ZeeFlix {version} → dist/ (relative URLs; no domain claimed)')
+print(f'Built Framewave {version} → dist/ (relative URLs; no domain claimed)')

@@ -1,4 +1,4 @@
-# ZeeFlix — Launch Kit
+# Framewave — Launch Kit
 
 Copy-paste launch material. Every image referenced here already exists in
 [`docs/marketing/`](marketing/) and is generated from real screenshots.
@@ -9,7 +9,7 @@ Copy-paste launch material. Every image referenced here already exists in
 - **Repo:** https://github.com/flixybuild-lgtm/ZeeFlix
 
 > ⚠️ **Before you post anything:** the repository must be **public** and the
-> **Publish ZeeFlix APK & Screenshots** workflow must have run once, otherwise the
+> **Publish Framewave APK & Screenshots** workflow must have run once, otherwise the
 > APK link 404s and the Pages site shows "There isn't a GitHub Pages site here".
 
 ---
@@ -26,7 +26,7 @@ Copy-paste launch material. Every image referenced here already exists in
 | Pages | Settings → Pages → Source: **GitHub Actions** |
 | Licence | MIT is already committed (`LICENSE`). Films keep their CC licences. |
 | Custom domain | Optional: [FREE_DOMAIN_SETUP.md](FREE_DOMAIN_SETUP.md) (DigitalPlat `.dpdns.org` → Cloudflare → Pages) |
-| Actions | Actions → *Publish ZeeFlix APK & Screenshots* → **Run workflow** (creates the `v1.0.0` release + APK) |
+| Actions | Actions → *Publish Framewave APK & Screenshots* → **Run workflow** (creates the `v1.0.0` release + APK) |
 
 Then check: `install.html` loads, the download button works, and the QR code scans.
 
@@ -36,7 +36,7 @@ Then check: `install.html` loads, the download button works, and the QR code sca
 
 **Title**
 ```
-Show HN: ZeeFlix – a streaming app I built in 9th grade (Rust/WASM + Kotlin)
+Show HN: Framewave – a streaming app I built in 9th grade (Rust/WASM + Kotlin)
 ```
 
 **URL:** `https://github.com/flixybuild-lgtm/ZeeFlix`
@@ -45,7 +45,7 @@ Show HN: ZeeFlix – a streaming app I built in 9th grade (Rust/WASM + Kotlin)
 ```
 Hi HN! I'm Zeeshan, 15, in 9th class at Government High School No. 1.
 
-ZeeFlix started because I wanted a streaming app that felt like Netflix but I had
+Framewave started because I wanted a streaming app that felt like Netflix but I had
 no money, no cloud and no team. So I built the whole thing myself:
 
 • Android app: Kotlin + AndroidX Media3/ExoPlayer (PiP, quality switching,
@@ -81,13 +81,13 @@ because I'm not good enough at wasm-bindgen yet. Thanks for looking!
 
 ### r/AndroidApps
 
-**Title:** `ZeeFlix — I built a free streaming app in 9th grade. No ads, no account, no trackers. 45 MB APK.`
+**Title:** `Framewave — I built a free streaming app in 9th grade. No ads, no account, no trackers. 45 MB APK.`
 
 **Body:**
 ```
 Hey r/AndroidApps 👋
 
-I'm 15 and this is ZeeFlix, my first real Android app. It's a small cinema for
+I'm 15 and this is Framewave, my first real Android app. It's a small cinema for
 open-licensed films, and I built the whole thing myself.
 
 Why you might like it
@@ -192,7 +192,7 @@ entire marketing budget. 🙏
 ```
 I'm 15 and I just shipped my first real product.
 
-ZeeFlix is a streaming app — the kind of thing you normally need a team for.
+Framewave is a streaming app — the kind of thing you normally need a team for.
 I built the Android app in Kotlin with AndroidX Media3, and the web version with
 a Rust core compiled to WebAssembly.
 
@@ -221,7 +221,7 @@ me to finish it, and to everyone who tests it on their phone.
 ```
 Bhai I finally finished my app 😭🔥
 
-ZeeFlix — Netflix jaisa UI, par FREE. No ads, no login, kuch bhi nahi.
+Framewave — Netflix jaisa UI, par FREE. No ads, no login, kuch bhi nahi.
 Sideload karo, chalega.
 👉 [APK link]
 
@@ -234,7 +234,7 @@ Test karke batao, kis phone pe kya issue aata hai. Aur GitHub pe ⭐ de dena �
 
 ## 7. Product Hunt (optional, needs a weekday launch)
 
-- **Name:** ZeeFlix
+- **Name:** Framewave
 - **Tagline:** `A student-built streaming app with zero ads, zero accounts, zero tracking.`
 - **Topics:** Android, Open Source, Developer Tools, Design Tools(?), Streaming
 - **Gallery (order):** `social-card.png`, `store-home-mobile.png`, `store-player-mobile.png`, `store-providers-mobile.png`, `feature-banner.png`
