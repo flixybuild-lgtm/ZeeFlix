@@ -423,7 +423,7 @@ fn an_unknown_share_id_renders_a_recoverable_page_not_a_dead_end() {
         "an unknown id must not be indexed as a real film"
     );
     assert!(
-        html.contains(r#"href="#movies""#),
+        html.contains(r##"href="#movies""##),
         "must offer a way back into the library"
     );
 }
