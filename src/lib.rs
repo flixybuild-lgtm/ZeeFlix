@@ -26,12 +26,24 @@ impl App {
             ["hero", n] => self.hero(n.parse().unwrap_or(0)),
             ["feed", genre] => self.feed(genre),
             ["chips", genre] => self.chips(genre),
+            // results · query · genre · actor · year · kind · sort
+            ["results", q, g, a, y, kind, sort] => self.results(Filter {
+                query: q,
+                genre: g,
+                actor: a,
+                year: y,
+                kind,
+                sort: Sort::parse(sort),
+            }),
             ["results", q, g, a, y] => self.results(Filter {
                 query: q,
                 genre: g,
                 actor: a,
                 year: y,
+                ..Filter::default()
             }),
+            ["related", id, limit] => self.related_rail(id, limit.parse().unwrap_or(4)),
+            ["share", id, base] => self.share_sheet(id, base),
             ["detail", id] => self.detail(id),
             ["player", id] => self.player(id),
             ["editor", id] => self.editor(id),

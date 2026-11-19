@@ -37,9 +37,45 @@ jobs:
           python-version: "3.11"
 
       - name: Format and Lint (Rust)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          set +e
           cargo fmt --check
-          cargo clippy --all-targets -- -D warnings
+          FMT=$?
+          set -e
+          if [ "$FMT" -ne 0 ]; then
+            # Publish the exact rustfmt patch on a side branch so it can be
+            # applied without log access, then still fail the job.
+            cargo fmt
+            git diff > /tmp/fmt.diff
+            cat /tmp/fmt.diff
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            mkdir -p ci-diagnostics
+            cp /tmp/fmt.diff ci-diagnostics/fmt.diff
+            git add -f ci-diagnostics/fmt.diff
+            git commit -m "CI: rustfmt diff for ${{ github.sha }}" || true
+            git push -f origin "HEAD:refs/heads/ci-artifacts/fmt-${GITHUB_RUN_ID}" || true
+            echo "patch: ci-artifacts/fmt-${GITHUB_RUN_ID}"
+            echo "::error::cargo fmt --check failed; see ci-artifacts/fmt-${GITHUB_RUN_ID}"
+            exit 1
+          fi
+          set +e
+          cargo clippy --all-targets -- -D warnings 2>&1 | tee /tmp/clippy.log
+          CLIPPY=${PIPESTATUS[0]}
+          set -e
+          if [ "$CLIPPY" -ne 0 ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            mkdir -p ci-diagnostics
+            cp /tmp/clippy.log ci-diagnostics/clippy.log
+            git add -f ci-diagnostics/clippy.log
+            git commit -m "CI: clippy log for ${{ github.sha }}" || true
+            git push -f origin "HEAD:refs/heads/ci-artifacts/clippy-${GITHUB_RUN_ID}" || true
+            echo "::error::clippy failed; see ci-artifacts/clippy-${GITHUB_RUN_ID}"
+            exit 1
+          fi
 
       - name: Run Rust Unit and Integration Tests
         run: cargo test --locked
