@@ -32,6 +32,10 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+
       - name: Install Android app dependencies
         working-directory: android-app
         run: npm ci
@@ -81,16 +85,27 @@ jobs:
       - name: Verify the APK (package, signature, alignment)
         run: |
           set -euo pipefail
+          fail() { echo "::error title=APK verification::$1"; exit 1; }
           APK="android-app/android/app/build/outputs/apk/debug/app-debug.apk"
-          test -f "$APK"
+          test -f "$APK" || fail "APK output missing: $APK"
           ls -lh "$APK"
           sha256sum "$APK"
           BT="$(ls -1 "$ANDROID_HOME"/build-tools | sort -V | tail -1)"
-          "$ANDROID_HOME/build-tools/$BT/aapt2" dump badging "$APK" > badging.txt
+          test -n "$BT" || fail "No Android build-tools installation found"
+          AAPT="$ANDROID_HOME/build-tools/$BT/aapt2"
+          if ! "$AAPT" dump badging "$APK" > badging.txt 2> badging-error.txt; then
+            fail "aapt2 could not inspect the APK: $(cat badging-error.txt)"
+          fi
           grep -E "^(package|sdkVersion|targetSdkVersion|application-label|launchable-activity|native-code)" badging.txt || true
-          grep -q "package: name='com.zeeflix.app'" badging.txt
-          "$ANDROID_HOME/build-tools/$BT/apksigner" verify --print-certs "$APK"
-          "$ANDROID_HOME/build-tools/$BT/zipalign" -c 4 "$APK"
+          grep -q "package: name='com.zeeflix.app'" badging.txt || fail "Unexpected APK package: $(grep '^package:' badging.txt || echo no-package-record)"
+          if ! "$ANDROID_HOME/build-tools/$BT/apksigner" verify --print-certs "$APK" > signer.txt 2>&1; then
+            fail "APK signature verification failed: $(cat signer.txt)"
+          fi
+          cat signer.txt
+          if ! "$ANDROID_HOME/build-tools/$BT/zipalign" -c 4 "$APK" > alignment.txt 2>&1; then
+            fail "APK alignment verification failed: $(cat alignment.txt)"
+          fi
+          cat alignment.txt
 
       - name: Upload Framewave Android APK
         uses: actions/upload-artifact@v4
