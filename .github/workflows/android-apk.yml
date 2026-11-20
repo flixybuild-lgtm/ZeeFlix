@@ -42,7 +42,22 @@ jobs:
 
       - name: Run Android unit tests, lint and build the APK
         working-directory: android-app/android
-        run: ./gradlew testDebugUnitTest lintDebug assembleDebug --no-daemon
+        run: |
+          set -o pipefail
+          ./gradlew testDebugUnitTest lintDebug assembleDebug --no-daemon --stacktrace 2>&1 | tee gradle-build.log
+
+      - name: Summarize Gradle failure
+        if: always()
+        working-directory: android-app/android
+        run: |
+          if [ -f gradle-build.log ] && [ "${{ job.status }}" = "failure" ]; then
+            {
+              echo '## Android Gradle failure (last 120 lines)'
+              echo '```text'
+              tail -n 120 gradle-build.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Verify the APK (package, signature, alignment)
         run: |
