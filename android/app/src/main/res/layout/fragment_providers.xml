@@ -29,18 +29,11 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Connect a Vega bridge or add an authorized video link."
+                android:text="Connect your trusted Zenda-Cross provider bridge. No media URL forms."
                 android:textColor="?attr/zfMuted"
                 android:textSize="12sp" />
         </LinearLayout>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnAddProvider"
-            android:layout_width="wrap_content"
-            android:layout_height="42dp"
-            android:text="+ Add"
-            android:textColor="?attr/zfAccentInk"
-            app:backgroundTint="?attr/zfAccent" />
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
@@ -53,10 +46,4 @@
         android:textColor="?attr/zfAccent"
         app:backgroundTint="?attr/zfGlassFill" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/providersRecycler"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="12dp"
-        android:layout_weight="1" />
 </LinearLayout>

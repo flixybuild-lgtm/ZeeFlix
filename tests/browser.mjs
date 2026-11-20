@@ -345,37 +345,16 @@ try {
     assert.ok((await iframe.getAttribute('src')).startsWith('https://www.youtube-nocookie.com/embed/'));
   });
 
-  await check('8. Provider manager: add, test real status, disable, enable, edit, delete', async () => {
+  await check('8. Providers page is Zenda-Cross-only and does not request standalone media URLs', async () => {
     await page.goto(`${BASE}/#providers`);
     await waitReady(page);
-
-    const localRow = page.locator('[data-probe-id="local"]');
-    await localRow.locator('[data-act="test-provider"]').click();
-    await page.waitForFunction(() => document.querySelector('[data-probe-id="local"] .status')?.textContent?.includes('Connected'));
-    assert.ok((await localRow.locator('.status').textContent()).includes('640 × 272'));
-
-    await page.locator('[data-act="edit-provider"]').first().click();
-    await page.fill('#provider-form input[name="name"]', 'My Local Screening');
-    await page.selectOption('#provider-form select[name="format"]', 'webm');
-    await page.fill('#provider-form input[name="url"]', 'media/sintel.webm');
-    await page.check('#provider-form input[name="download"]');
-    await page.check('#provider-form input[name="rights"]');
-    await page.locator('#provider-form button[type="submit"]').click();
-
-    await page.waitForSelector('[data-probe-id="custom-1"]');
-    await page.locator('[data-probe-id="custom-1"] [data-act="test-provider"]').click();
-    await page.waitForFunction(() => document.querySelector('[data-probe-id="custom-1"] .status')?.textContent?.includes('Connected'));
-
-    await page.locator('[data-probe-id="custom-1"] [data-act="enable"]').click();
-    await page.goto(`${BASE}/#title/custom-1`);
-    await waitReady(page);
-    assert.ok((await page.locator('#main').textContent()).includes('Title unavailable'));
-
-    await page.goto(`${BASE}/#providers`);
-    await waitReady(page);
-    await page.locator('[data-probe-id="custom-1"] [data-act="delete-provider"]').click();
-    await page.locator('#confirm-action').click();
-    assert.equal(await page.locator('[data-probe-id="custom-1"]').count(), 0);
+    const text = await page.locator('#main').textContent();
+    assert.ok(text.includes('Connect Zenda-Cross'));
+    assert.ok(text.includes('…/manifest.json'));
+    assert.ok(text.includes('CORS'));
+    assert.ok(text.includes('does not ask you to paste a video or streaming URL'));
+    assert.equal(await page.locator('#provider-form').count(), 0);
+    assert.equal(await page.locator('[data-act="edit-provider"]').count(), 0);
   });
 
   await check('Vega bridge: validate, browse extension metadata, search, play and disconnect', async () => {
@@ -386,7 +365,7 @@ try {
         const url = new URL(route.request().url());
         const headers = {'access-control-allow-origin':'*'};
         if (url.pathname === '/manifest.json') return route.fulfill({headers, json:{id:'community.vega.stremio', resources:['stream'], types:['movie','series']}});
-        if (url.pathname === '/stream/movie/tt1234567.json') return route.fulfill({headers, json:{streams:[{name:'Demo provider', url:`${origin}/film.webm?temporary=1`}]}});
+        if (url.pathname === '/stream/movie/tt1234567.json') return route.fulfill({headers, json:{streams:[{name:'Demo provider', url:`${origin}/film.webm?temporary=1`},{name:'Marked 18+ source', adult:true, url:`${origin}/adult.webm`}]}});
         if (url.pathname === '/film.webm') return route.fulfill({headers, contentType:'video/webm', path:path.join(ROOT,'public/media/sintel.webm')});
         return route.fulfill({status:404, headers});
       });
@@ -398,16 +377,26 @@ try {
       await fixture.locator('#bridge-index-btn').click();
       await fixture.getByText('Demo Extension · v2.0 · Disabled upstream').waitFor();
       await fixture.locator('#bridge-connect input').fill('https://github.com/Zenda-Cross/vega-providers');
-      await fixture.getByRole('button', {name:'Connect bridge'}).click();
+      await fixture.getByRole('button', {name:'Connect Zenda-Cross'}).click();
       await fixture.getByText('not its GitHub repository', {exact:false}).waitFor();
       await fixture.locator('#bridge-connect input').fill(`${origin}/manifest.json`);
-      await fixture.getByRole('button', {name:'Connect bridge'}).click();
+      await fixture.getByRole('button', {name:'Connect Zenda-Cross'}).click();
       await fixture.getByText('Bridge saved on this device.', {exact:false}).waitFor();
       await fixture.reload(); await waitReady(fixture);
       await fixture.locator('#bridge-search input[name=titleId]').fill('tt1234567');
       await fixture.locator('#bridge-search input[name=permission]').check();
       await fixture.getByRole('button', {name:'Find streams'}).click();
-      await fixture.locator('#bridge-results').getByRole('button', {name:'Watch'}).click();
+      await fixture.locator('#bridge-results li').first().waitFor();
+      assert.equal(await fixture.locator('#bridge-results li').count(), 1, 'Marked adult source should be hidden by default');
+      await fixture.goto(`${BASE}/#settings`); await waitReady(fixture);
+      assert.equal(await fixture.locator('[data-key="adult"]').getAttribute('aria-checked'), 'false');
+      await fixture.locator('[data-key="adult"]').click();
+      await fixture.goto(`${BASE}/#providers`); await waitReady(fixture);
+      await fixture.locator('#bridge-search input[name=titleId]').fill('tt1234567');
+      await fixture.locator('#bridge-search input[name=permission]').check();
+      await fixture.getByRole('button', {name:'Find streams'}).click();
+      await fixture.waitForFunction(() => document.querySelectorAll('#bridge-results li').length === 2);
+      await fixture.locator('#bridge-results').getByRole('button', {name:'Watch'}).first().click();
       await fixture.waitForFunction(() => document.querySelector('video')?.readyState >= 2);
       assert.equal(await fixture.locator('#player').getAttribute('data-id'), 'vega-session');
       assert.equal(await fixture.locator('#download-current').isVisible(), false);

@@ -35,14 +35,16 @@ export function streamURL(manifest, raw) {
   return new URL(`stream/${type}/${id}.json`, manifestURL(manifest)).href;
 }
 const labelText = text => typeof text === 'string' ? text.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').trim() : '';
-export function parseStreams(data) {
+export function parseStreams(data, allowAdult = true) {
   if (!Array.isArray(data?.streams)) throw new Error('The bridge did not return a stream list.');
   const streams = [];
   const seen = new Set();
   for (const stream of data.streams.slice(0, 250)) {
     const url = httpsURL(stream?.url);
     const hints = stream?.behaviorHints;
-    if (!url || seen.has(url.href) || stream.drm || url.pathname.includes('/embed/') || hints?.notWebReady || Object.keys(hints?.proxyHeaders?.request || {}).length) continue;
+    const label = `${stream?.name || ''} ${stream?.description || ''} ${stream?.title || ''}`;
+    const adult = stream?.adult === true || hints?.adult === true || /(?:^|[^a-z0-9])(?:18\s*\+|adult|mature)(?:$|[^a-z0-9])/i.test(label);
+    if ((!allowAdult && adult) || !url || seen.has(url.href) || stream.drm || url.pathname.includes('/embed/') || hints?.notWebReady || Object.keys(hints?.proxyHeaders?.request || {}).length) continue;
     seen.add(url.href);
     const name = Array.from(labelText(stream.name) || 'Vega stream').slice(0, 60).join('');
     const title = Array.from(labelText(stream.description || stream.title)).slice(0, 180).join('');
@@ -96,7 +98,7 @@ async function readJSON(url, signal, timeout = 12000) {
 export function mountVega(root, onPlay) {
   const controller = new AbortController();
   const {signal} = controller;
-  root.innerHTML = `<form class="bridge-form" id="bridge-connect"><label>Vega bridge manifest URL<input name="manifest" type="url" placeholder="https://your-bridge.example/manifest.json" required maxlength="2048"></label><button type="submit" class="btn gold">Connect bridge</button><button type="button" class="btn subtle" id="bridge-remove" hidden>Disconnect</button></form>
+  root.innerHTML = `<form class="bridge-form" id="bridge-connect"><label>Zenda-Cross bridge HTTPS manifest URL<input name="manifest" type="url" placeholder="https://your-bridge.example/manifest.json" required maxlength="2048" autocomplete="url"></label><button type="submit" class="btn gold">Connect Zenda-Cross</button><button type="button" class="btn subtle" id="bridge-remove" hidden>Disconnect</button></form>
     <p class="bridge-status" id="bridge-status" role="status"></p>
     <div id="bridge-search-panel" hidden><form class="bridge-form" id="bridge-search"><label>IMDb movie or episode ID<input name="titleId" required maxlength="30" placeholder="tt1234567 or tt1234567:1:2"></label><label class="check-label"><input name="permission" type="checkbox" required> I have permission to watch this media.</label><button type="submit" class="btn gold">Find streams</button></form><p class="bridge-status" id="bridge-stream-status" role="status"></p><ul class="bridge-streams" id="bridge-results"></ul></div>
     <div class="bridge-links"><button type="button" class="btn subtle small" id="bridge-index-btn" aria-expanded="false" aria-controls="bridge-index-panel">Browse extension index</button><a class="text-link" href="${repository}" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a class="text-link" href="https://github.com/Ashishsri2018/vega-stremio-addon#quick-start" target="_blank" rel="noopener noreferrer">Bridge setup ↗</a></div>
@@ -170,7 +172,9 @@ export function mountVega(root, onPlay) {
     button.disabled = true;
     lastSearch = null; results.replaceChildren(); streamStatus.textContent = 'Looking up streams…';
     try {
-      const streams = parseStreams(await readJSON(streamURL(endpoint, id), signal, 60000));
+      let allowAdult = false;
+      try { allowAdult = localStorage.getItem('zeeflix:allow-adult:v1') === '1'; } catch { /* Default to hide marked 18+ results. */ }
+      const streams = parseStreams(await readJSON(streamURL(endpoint, id), signal, 60000), allowAdult);
       if (signal.aborted || revision !== requestRevision || search.elements.titleId.value.trim() !== id) return;
       lastSearch = {id, streams}; paint(id, streams);
     } catch (error) {

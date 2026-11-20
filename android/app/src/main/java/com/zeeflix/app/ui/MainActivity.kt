@@ -34,13 +34,6 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
-        binding.btnQuickAddProvider.setOnClickListener {
-            binding.bottomNav.selectedItemId = R.id.nav_providers
-            binding.root.post {
-                val frag = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
-                if (frag is ProvidersFragment) frag.openAddDialog()
-            }
-        }
     }
 
     private fun switchFragment(fragment: Fragment) {

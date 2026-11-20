@@ -10,7 +10,7 @@ impl App {
         let (page, arg) = route.split_once('/').unwrap_or((route, ""));
         if page == "home" || page.is_empty() {
             return format!(
-                r##"<div id="spotlight">{}</div><div class="home-body wrap"><section class="source-dock"><span class="dock-signal" aria-hidden="true">{}</span><div><small>THE CONNECTION DECK</small><h2>Your screen. Your sources.</h2><p>Connect a Vega bridge for Zenda-Cross or play an authorized video link.</p></div><div class="source-actions"><a class="btn gold" href="#providers">{} Open Providers</a><button class="btn glass" data-act="edit-provider">Enter provider HTTPS ↗</button></div></section><div class="genre-bar" id="genre-bar" aria-label="Genre filters">{}</div><div id="home-feed">{}</div></div>"##,
+                r##"<div id="spotlight">{}</div><div class="home-body wrap"><section class="source-dock"><span class="dock-signal" aria-hidden="true">{}</span><div><small>THE CONNECTION DECK</small><h2>Your screen. Your provider.</h2><p>Connect your trusted Zenda-Cross provider bridge to discover and watch titles.</p></div><div class="source-actions"><a class="btn gold" href="#providers">{} Connect Zenda-Cross</a></div></section><div class="genre-bar" id="genre-bar" aria-label="Genre filters">{}</div><div id="home-feed">{}</div></div>"##,
                 self.hero(0),
                 icon("spark"),
                 icon("link"),
@@ -362,76 +362,21 @@ impl App {
             }
         )
     }
-    pub fn editor(&self, id: &str) -> String {
-        let p = self.providers.iter().find(|p| p.id == id);
-        let fmt = p.map_or("auto", |p| p.format.as_str());
-        let options = [
-            ("auto", "Auto · detect from URL"),
-            ("mp4", "Direct video / MP4"),
-            ("webm", "WebM"),
-            ("hls", "HLS manifest"),
-            ("dash", "DASH manifest"),
-            ("embed", "Authorized embed"),
-        ]
-        .iter()
-        .map(|(v, l)| opt(v, l, fmt))
-        .collect::<String>();
-        format!(
-            r#"<form id="provider-form"><p class="eyebrow"><i></i>MEDIA CONNECTION</p><h2>{} provider</h2><p class="muted">Paste a playable HTTPS link, not a plugin repository. Change the display title to match your stream.</p><input type="hidden" name="key" value="{}"><label>Display title<input name="name" required maxlength="90" placeholder="My short film" value="{}"></label><label>Source type<select name="format">{options}</select></label><label>Provider HTTPS URL<input name="url" required maxlength="2048" placeholder="https://…" value="{}"></label><p class="fine">Use HTTPS. Embeds must be official YouTube, Vimeo or Blender player links. Do not enter credentials.</p><label class="check-label"><input type="checkbox" name="download" {}> Allow file downloads (direct video only)</label><label class="check-label"><input type="checkbox" name="rights" required> I have permission to stream this media and authorize any downloads.</label><p id="form-error" role="alert"></p><button class="btn gold" type="submit">Save provider {}</button></form>"#,
-            if p.is_some() { "Edit" } else { "Add" },
-            p.map_or("", |p| &p.id),
-            p.map_or_else(String::new, |p| esc(&p.name)),
-            p.map_or_else(String::new, |p| esc(&p.url)),
-            if p.is_some_and(|p| p.download) {
-                "checked"
-            } else {
-                ""
-            },
-            icon("check")
-        )
-    }
     fn providers_page(&self) -> String {
-        let mut list = vec![
-            (
-                "local",
-                "Framewave Library",
-                "local",
-                "media/sintel.webm",
-                self.local,
-            ),
-            (
-                "blender",
-                "Blender Open Movies",
-                "peer",
-                "8533ea43-4271-4a57-9694-e9d0b35e1aa1",
-                self.blender,
-            ),
-        ];
-        list.extend(self.providers.iter().map(|p| {
-            (
-                p.id.as_str(),
-                p.name.as_str(),
-                p.format.as_str(),
-                p.url.as_str(),
-                p.enabled,
-            )
-        }));
-        let rows=list.iter().fold(String::new(), |mut out, (id,name,fmt,url,on)| {let custom=id.starts_with("custom-");let watch=if custom && *on { format!(r##"<a class="text-link" href="#watch/{id}">Watch →</a>"##) } else {String::new()};let edit=if custom{format!(r#"<button class="icon-btn" aria-label="Edit {}" data-act="edit-provider" data-id="{id}">{}</button><button class="icon-btn" aria-label="Delete {}" data-act="delete-provider" data-id="{id}">{}</button>"#,esc(name),icon("edit"),esc(name),icon("trash"))}else{String::new()};write!(out,r#"<div class="provider-row" data-probe-id="{id}" data-format="{fmt}" data-url="{}"><span class="setting-ico">{}</span><div class="provider-copy"><h3>{}</h3><p>{} · <span class="status" role="status">{}</span></p></div><div class="provider-acts">{watch}<button class="btn subtle small" data-act="test-provider" {}>Test</button>{edit}<button role="switch" class="switch" data-act="enable" data-id="{id}" aria-checked="{on}" aria-label="Enable {}"></button></div></div>"#,esc(url),icon("link"),esc(name),if custom{fmt.to_uppercase()}else{"Built-in".into()},if *on{"Not tested"}else{"Disabled"},if *on{""}else{"disabled"},esc(name)).unwrap(); out});
         format!(
-            r#"{}<section class="panel vega-deck" aria-labelledby="vega-title"><div class="vega-deck-head"><span class="dock-signal" aria-hidden="true">{}</span><div><p class="overline">VEGA EXTENSION SOURCE</p><h2 id="vega-title">Zenda-Cross</h2><p>Connect your own Vega-compatible stream bridge. A GitHub repository lists extensions; it does not serve playable videos.</p></div></div><div id="vega-connection"></div></section><div class="panel-head"><h2>Direct media sources</h2><button class="btn gold small" data-act="edit-provider">{} Add provider</button></div><div class="panel">{rows}</div><p class="fine">Tests run from your browser. An unreachable host or a CORS restriction is reported, never assumed connected. Disabling a source removes its titles from browsing without erasing your list.</p>"#,
+            r#"{}<section class="panel vega-deck" aria-labelledby="vega-title"><div class="vega-deck-head"><span class="dock-signal" aria-hidden="true">{}</span><div><p class="overline">Zenda-Cross PROVIDER</p><h2 id="vega-title">Connect Zenda-Cross</h2><p>Connect only to a trusted, running Zenda-Cross / Vega bridge. A GitHub repository URL is not a connection address. This app does not ask you to paste a video or streaming URL.</p></div></div><div id="vega-connection"></div></section><section class="panel provider-help"><h2>Connection troubleshooting</h2><ol><li>Start or host a compatible Zenda-Cross Vega bridge and make sure it has a public HTTPS address.</li><li>In the box above, enter its <code>…/manifest.json</code> address — not a GitHub repository URL.</li><li>For web use, the bridge must allow this app's origin with CORS. If connection fails, check the bridge is online, HTTPS certificate is valid, and CORS is enabled.</li></ol><p class="fine">Only connect to a bridge you trust. The bridge host can see the title IDs you search and your network address. Framewave does not install extension code or provide media links.</p></section>"#,
             head(
-                "CONTROL ROOM",
+                "YOUR CONNECTION",
                 "Providers",
-                "Manage extensions and authorized media links in one place."
+                "One provider connection: Zenda-Cross. No standalone media URLs."
             ),
-            icon("spark"),
-            icon("plus")
+            icon("link")
         )
     }
     fn settings_page(&self) -> String {
-        let toggles=[("splash","Opening animation","Show the creator’s opening credits once per session.",self.splash,"spark"),("autoplay","Auto-play next episode","Continue to the next available episode when one ends.",self.autoplay,"play")].iter().fold(String::new(), |mut out, (key,title,copy,on,ic)| {write!(out,r#"<div class="setting-row"><span class="setting-ico">{}</span><div><h3>{title}</h3><p>{copy}</p></div><button class="switch" role="switch" aria-label="{title}" aria-checked="{on}" data-act="pref" data-key="{key}"></button></div>"#,icon(ic)).unwrap(); out});
+        let toggles=[("splash","Opening animation","Show the creator’s opening credits once per session.",self.splash,"spark"),("autoplay","Auto-play next episode","Continue to the next available episode when one ends.",self.autoplay,"play"),("adult","Allow 18+ results","Off by default. When on, show provider results marked 18+ or adult; provider labels are not verified.",false,"shield")].iter().fold(String::new(), |mut out, (key,title,copy,on,ic)| {write!(out,r#"<div class="setting-row"><span class="setting-ico">{}</span><div><h3>{title}</h3><p>{copy}</p></div><button class="switch" role="switch" aria-label="{title}" aria-checked="{on}" data-act="pref" data-key="{key}"></button></div>"#,icon(ic)).unwrap(); out});
         format!(
-            r##"{}<div class="panel settings-panel">{toggles}<div class="setting-row"><span class="setting-ico">{}</span><div><h3>Theme</h3><p>Choose your cinema palette.</p></div><select aria-label="Theme" id="theme">{}{}{}{}</select></div><div class="setting-row"><span class="setting-ico">{}</span><div><h3>Playback history</h3><p>Remove watch positions and recently watched titles.</p></div><button class="btn subtle small" data-act="clear-history">Clear history</button></div><a class="setting-row" href="#providers"><span class="setting-ico">{}</span><div><h3>Providers</h3><p>Connect, test and manage your media sources.</p></div>{}</a></div>"##,
+            r##"{}<div class="panel settings-panel">{toggles}<div class="setting-row"><span class="setting-ico">{}</span><div><h3>Theme</h3><p>Choose your cinema palette.</p></div><select aria-label="Theme" id="theme">{}{}{}{}</select></div><div class="setting-row"><span class="setting-ico">{}</span><div><h3>Playback history</h3><p>Remove watch positions and recently watched titles.</p></div><button class="btn subtle small" data-act="clear-history">Clear history</button></div><a class="setting-row" href="#providers"><span class="setting-ico">{}</span><div><h3>Zenda-Cross</h3><p>Manage your trusted provider bridge.</p></div>{}</a><div class="setting-row"><span class="setting-ico">{}</span><div><h3>Reset this app</h3><p>Clear watch history, lists, preferences and the saved Zenda-Cross connection from this device.</p></div><button class="btn subtle small" data-act="clear-data">Clear app data</button></div></div>"##,
             head(
                 "YOUR EXPERIENCE",
                 "Settings",
@@ -444,7 +389,8 @@ impl App {
             opt("midnight", "Midnight blue", &self.theme),
             icon("history"),
             icon("link"),
-            icon("right")
+            icon("right"),
+            icon("trash")
         )
     }
     fn about(&self) -> String {

@@ -13,5 +13,5 @@
 
 - The compatible endpoint advertises `community.vega.stremio`, the `stream` resource, and `movie` and `series` types. Lookups use `/stream/movie/<imdb-id>.json` or `/stream/series/<imdb-id>:<season>:<episode>.json` under the same manifest directory.
 - This is a stream lookup integration, not a full Vega clone. It does not provide catalog browsing by title, native extension installation, private repo access, DRM, torrent playback, external web pages, arbitrary provider request headers, or downloads. Results need a playable HTTPS link (MP4/WebM, HLS `.m3u8` or DASH `.mpd` subject to device codec support).
-- If no compatible streams are returned, check that the bridge is healthy and serving direct HTTPS links for authorized media. `Enter provider HTTPS` remains available for a standalone media URL.
+- If no compatible streams are returned, verify the bridge is healthy, its enabled extensions are working, it returns playable HTTPS links for authorized media, and CORS is enabled. Framewave intentionally has no standalone media-URL form.
 - Browser tests use a mock compatible endpoint and included open film. They do not verify any third-party production stream.

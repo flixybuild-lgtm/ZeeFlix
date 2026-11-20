@@ -34,7 +34,9 @@ window.__zfRouteFromPath = routeFromPath;
 /** Absolute base of the deployed app, used for share links and deep links. */
 const baseURL = () => new URL('.', document.baseURI).href;
 /** A share page lives one directory deeper; <base href> already points home. */
-function prefs() { const [splash, autoplay, theme] = call('prefs').split('\n'); document.documentElement.dataset.theme = theme; $('meta[name=theme-color]')?.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()); return {splash: splash === '1', autoplay: autoplay === '1'}; }
+const ageKey = 'zeeflix:allow-adult:v1';
+function allowAdult() { try { return localStorage.getItem(ageKey) === '1'; } catch { return false; } }
+function prefs() { const [splash, autoplay, theme] = call('prefs').split('\n'); document.documentElement.dataset.theme = theme; document.documentElement.dataset.allowAdult = String(allowAdult()); $('meta[name=theme-color]')?.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()); return {splash: splash === '1', autoplay: autoplay === '1'}; }
 function menu(open) { $('#profile-menu').hidden = !open; document.querySelectorAll('[data-act=profile]').forEach(b => b.setAttribute('aria-expanded', String(open))); }
 function dialog(html) { $('#dialog-content').innerHTML = html; if (!$('#dialog').open) $('#dialog').showModal(); }
 /** The Rust renderer emits `{{base}}` for links that depend on where the site is
@@ -49,6 +51,8 @@ async function render(scroll = true, first = false) {
   if (r !== 'watch/vega-session') bridgePlayback = undefined;
   // Retain the pre-rendered home when nothing needs hydration.
   if (!(first && r === 'home' && !window.__zfRestored)) $('#main').innerHTML = patchBase(call('page', r));
+  const ageToggle = $('[data-key="adult"]');
+  if (ageToggle) ageToggle.setAttribute('aria-checked', String(allowAdult()));
   if (r === 'watch/vega-session' && bridgePlayback) $('#main').innerHTML = call('bridge-player', bridgePlayback.name, bridgePlayback.url);
   document.querySelectorAll('[data-nav]').forEach(a => { const selected = a.dataset.nav === r || (a.dataset.nav === 'categories' && r.startsWith('genre/')); a.classList.toggle('current', selected); if (selected) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
   const title = $('#main h1')?.textContent;
@@ -105,6 +109,7 @@ function onClick(e) {
     case 'slide': case 'next-slide': case 'prev-slide': { const hero = $('.hero'), num = Number(hero.dataset.slide), count = Number(hero.dataset.slides); const slide = act === 'slide' ? Number(n) : (num + (act === 'next-slide' ? 1 : -1) + count) % count; $('#spotlight').innerHTML = call('hero', slide); break; }
     case 'reset-search': $('#query').value = ''; document.querySelectorAll('.filters select').forEach(s => s.value = ''); deliverSearch(); $('#query').focus(); break;
     case 'clear-history': confirmAction('Clear playback history?', 'This removes watch positions and recently watched titles on this device. Your list and favorites will stay.', 'Clear history', () => { change('clear-history'); render(false); toast('Playback history cleared'); }); break;
+    case 'clear-data': confirmAction('Reset Framewave on this device?', 'This clears your local lists, favorites, playback history, settings, and saved Zenda-Cross connection. This cannot be undone.', 'Clear app data', () => { try { for (const k of Object.keys(localStorage)) if (k.startsWith('zeeflix:')) localStorage.removeItem(k); sessionStorage.removeItem('zeeflix:intro'); } catch { /* Private mode may disable storage. */ } location.reload(); }); break;
     case 'open-share': dialog(call('share', id, baseURL())); break;
     case 'share-native': {
       import('./share.js').then(async m => {
@@ -127,11 +132,7 @@ function onClick(e) {
         .catch(err => toast(err.message || 'Poster could not be saved'));
       break;
     }
-    case 'edit-provider': dialog(call('editor', id)); break;
-    case 'delete-provider': confirmAction('Remove this provider?', 'Its title, watch position and bookmarks will be removed from this device.', 'Remove', () => {change('delete', id); probeResults.delete(id); render(false); toast('Provider removed');}); break;
-    case 'enable': change('enable', id); probeResults.delete(id); render(false); break;
-    case 'pref': {const on = button.getAttribute('aria-checked') !== 'true'; change('pref', pref, on ? '1' : '0'); button.setAttribute('aria-checked', String(on)); break;}
-    case 'test-provider': { const row = button.closest('[data-probe-id]'); button.disabled = true; status(row, {label:'Testing…'}); import('./sources.js').then(m => m.probe(row.dataset)).then(result => { if (row.isConnected) {probeResults.set(row.dataset.probeId, result); status(row, result); button.disabled = false;} }).catch(() => {status(row, {label:'Test failed',ok:false}); button.disabled = false;}); break; }
+    case 'pref': {const on = button.getAttribute('aria-checked') !== 'true'; if (pref === 'adult') { try { if (on) localStorage.setItem(ageKey, '1'); else localStorage.removeItem(ageKey); } catch { toast('Browser storage unavailable; the choice may not persist.'); } document.documentElement.dataset.allowAdult = String(on); } else change('pref', pref, on ? '1' : '0'); button.setAttribute('aria-checked', String(on)); break;}
   }
 }
 async function boot() {
@@ -145,11 +146,6 @@ async function boot() {
     try {sessionStorage.setItem('zeeflix:intro','1');} catch { /* Optional storage. */ }
   }
   document.addEventListener('click', onClick);
-  document.addEventListener('submit', e => {if (e.target.id !== 'provider-form') return; e.preventDefault(); const d = new FormData(e.target); const t = ['key','name','url','format'].map(k=>String(d.get(k) || '').trim());
-    if (t.some(v => /[\n\r\t]/.test(v))) {$('#form-error').textContent = 'Fields must be a single line.'; return;}
-    const result = change('provider', ...t, d.has('download') ? '1' : '0', d.has('rights') ? 'authorized' : '');
-    if (result !== 'ok') {$('#form-error').textContent = result; return;} probeResults.delete(t[0]); $('#dialog').close(); if (route() === 'home') location.hash = 'providers'; else render(false); toast('Provider saved');
-  });
   document.addEventListener('input', e => {if (e.target.id === 'query') { clearTimeout(searchTimer); searchTimer = setTimeout(deliverSearch, 110); }});
   document.addEventListener('change', e => {if (e.target.closest('.filters')) deliverSearch(); if (e.target.id === 'theme') {change('pref','theme',e.target.value); prefs();} });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') {menu(false); dismissSplash?.();} if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.target.closest('input,select,textarea,dialog,#player')) {e.preventDefault(); if (route() !== 'search') location.hash = 'search'; else $('#query').focus();} });

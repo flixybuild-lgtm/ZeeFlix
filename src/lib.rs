@@ -47,7 +47,6 @@ impl App {
             ["detail", id] => self.detail(id),
             ["player", id] => self.player(id),
             ["bridge-player", name, url] => self.bridge_player(name, url),
-            ["editor", id] => self.editor(id),
             ["saved", id] => u8::from(self.list.contains(*id)).to_string(),
             _ => "Unrecognized request.".into(),
         }

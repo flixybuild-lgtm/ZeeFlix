@@ -1,12 +1,12 @@
-# Framewave 1.1.0
+# Framewave 1.2.0
 
-ZeeFlix is now **Framewave**. Open Home and choose **Enter provider HTTPS**. Paste an authorized video URL, confirm permission and save. On the web, select **Watch →** in Providers; on Android, choose **Save & Watch**.
+This update makes Zenda-Cross the only configurable provider in the web and Android apps. Provider setup now asks for a trusted running bridge's HTTPS `manifest.json` endpoint—not a GitHub repository or a standalone media URL. The app does not install extension code.
 
-- **Plugin-free playback:** the editable display title starts as Zenda-Cross. The URL, not the title, determines the source. Vega plugin repositories are not playable URLs. Built-in films keep their original sources.
-- **Automatic format selection:** MP4/direct, WebM, HLS (`.m3u8`), DASH (`.mpd`) and supported official embeds. Select a format manually for extensionless manifests.
-- **Discover and keep watching:** genre shelves, title details, search, My List, favorites and local resume history. Renditions and authorized downloads depend on the source.
-- **New identity:** signal-mark launcher icon, mint screening-room palette, framed spotlight and a dedicated HTTPS shortcut.
+- **Zenda-Cross connection help:** clearer setup instructions, HTTPS manifest validation, and CORS / availability troubleshooting for web users.
+- **Adult-result control:** results explicitly marked 18+ or adult are hidden by default; enable them in Settings. Provider labels are not verified, so this is not a parental lock.
+- **More useful settings:** clear playback history or reset local library/preferences and the saved bridge connection.
+- **Player controls:** Android adds direct ten-second back/forward buttons, alongside quality/audio/subtitle selection, speed, fullscreen, picture-in-picture, and resume playback.
+- **New app icon:** custom engraved great white shark artwork with a mint signal motif, applied to web, PWA, and Android launcher icons.
+- **Deployment improvements:** CI preserves a downloadable site artifact when GitHub Pages is not configured and explains why the live URL may still show a GitHub 404.
 
-**Install:** Android 7.0+; download `Framewave-v1.1.0-debug.apk` (also available as `ZeeFlix-latest.apk` for existing links). This is a debug-signed sideload build, not a Play Store release. Verify the file against `SHA256SUMS.txt`. If Android reports a signing-key conflict, uninstalling the old app will erase its local data.
-
-**Screenshots:** the attached Home and provider-entry images are captures of the responsive web app, not Android emulator mockups.
+**Install:** Android 7.0+; the release workflow publishes `Framewave-v1.2.0-debug.apk` and the stable `ZeeFlix-latest.apk` alias. This is a debug-signed sideload build, not a Play Store release. Verify against `SHA256SUMS.txt`.

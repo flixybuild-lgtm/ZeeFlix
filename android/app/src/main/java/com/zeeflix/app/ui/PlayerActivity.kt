@@ -97,6 +97,13 @@ class PlayerActivity : AppCompatActivity() {
         binding.playerOptionsBar.applyBottomSystemBarInsets()
     }
 
+    private fun seekBy(deltaMs: Long) {
+        val current = player ?: return
+        val target = (current.currentPosition + deltaMs).coerceAtLeast(0L)
+        val duration = current.duration
+        current.seekTo(if (duration > 0) target.coerceAtMost(duration) else target)
+    }
+
     private fun setupEpisodes() {
         val prevId = if (film.id == "llamigos") "gran-dillama" else ""
         val nextId = if (film.id == "gran-dillama") "llamigos" else ""
@@ -144,6 +151,8 @@ class PlayerActivity : AppCompatActivity() {
             player?.setPlaybackParameters(PlaybackParameters(s))
         }
 
+        binding.btnSkipBack.setOnClickListener { seekBy(-10_000L) }
+        binding.btnSkipForward.setOnClickListener { seekBy(10_000L) }
         binding.btnQuality.setOnClickListener { showQualityPicker() }
         binding.btnSubtitles.setOnClickListener { showTrackPicker(C.TRACK_TYPE_TEXT, "Subtitles") }
         binding.btnAudioTrack.setOnClickListener { showTrackPicker(C.TRACK_TYPE_AUDIO, "Audio Tracks") }

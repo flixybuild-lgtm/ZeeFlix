@@ -58,7 +58,11 @@ internal object VegaBridge {
 
     data class Stream(val name: String, val detail: String, val url: String)
 
-    suspend fun streams(manifest: String, id: String): List<Stream> = withContext(Dispatchers.IO) {
+    internal fun isAdultMarked(name: String, detail: String, explicitFlag: Boolean): Boolean =
+        explicitFlag || Regex("(?:^|[^a-z0-9])(?:18\\s*\\+|adult|mature)(?:$|[^a-z0-9])", RegexOption.IGNORE_CASE)
+            .containsMatchIn("$name $detail")
+
+    suspend fun streams(manifest: String, id: String, allowAdult: Boolean = false): List<Stream> = withContext(Dispatchers.IO) {
         val data = readJson(streamUrl(manifest, id), readMillis = 60000)
         val list = data.optJSONArray("streams") ?: throw IOException("The bridge did not return a stream list.")
         val seen = hashSetOf<String>()
@@ -70,10 +74,11 @@ internal object VegaBridge {
                 val hints = item.optJSONObject("behaviorHints")
                 if (hints?.optBoolean("notWebReady") == true ||
                     (hints?.optJSONObject("proxyHeaders")?.optJSONObject("request")?.length() ?: 0) > 0) continue
-                val target = url.toASCIIString()
-                if (!seen.add(target)) continue
                 val name = clean(item.optString("name"), 60).ifBlank { "Vega stream" }
                 val detail = clean(item.optString("description").ifBlank { item.optString("title") }, 180)
+                if (!allowAdult && isAdultMarked(name, detail, item.optBoolean("adult") || hints?.optBoolean("adult") == true)) continue
+                val target = url.toASCIIString()
+                if (!seen.add(target)) continue
                 add(Stream(name, detail, target))
                 if (size == 30) break
             }

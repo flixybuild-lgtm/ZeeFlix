@@ -28,6 +28,16 @@ test('stream results are bounded, deduplicated and limited to direct HTTPS playb
   assert.throws(() => parseStreams({message:'error'}), /list/);
 });
 
+test('18+ provider streams stay hidden unless the setting explicitly allows them', () => {
+  const streams = {streams:[
+    {name:'Ordinary source', url:'https://media.example/ordinary.mp4'},
+    {name:'18+ source', url:'https://media.example/adult.mp4'},
+    {name:'Another source', adult:true, url:'https://media.example/adult-flagged.mp4'},
+  ]};
+  assert.deepEqual(parseStreams(streams, false).map(s => s.name), ['Ordinary source']);
+  assert.deepEqual(parseStreams(streams, true).map(s => s.name), ['Ordinary source', '18+ source', 'Another source']);
+});
+
 test('extension manifests are read as metadata, including disabled entries', () => {
   const content = Buffer.from(JSON.stringify([{display_name:'Cinéma',value:'cinema',version:'2.0',disabled:true}, null])).toString('base64');
   assert.deepEqual(parseDirectory({encoding:'base64', content}), [{name:'Cinéma',version:'2.0',disabled:true}]);

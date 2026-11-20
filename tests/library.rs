@@ -128,7 +128,9 @@ fn provider_crud_and_xss_escaping() {
         "ok"
     );
     let html = a.command("page\nproviders");
-    assert!(html.contains("&lt;script&gt;x&lt;/script&gt;"));
+    assert!(html.contains("Connect Zenda-Cross"));
+    assert!(html.contains("does not ask you to paste a video or streaming URL"));
+    assert!(!html.contains("https://example.com/film.mp4"));
     assert!(!html.contains("<script>x</script>"));
     assert_eq!(a.command("delete\ncustom-1"), "ok");
     assert!(a.find("custom-1").is_none());

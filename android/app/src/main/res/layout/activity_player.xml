@@ -122,6 +122,30 @@
                 app:strokeColor="@color/zf_glass_stroke" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSkipBack"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginStart="8dp"
+                android:contentDescription="Back ten seconds"
+                android:text="−10s"
+                android:textColor="@color/zf_text"
+                android:textSize="12sp"
+                app:strokeColor="@color/zf_glass_stroke" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSkipForward"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginStart="8dp"
+                android:contentDescription="Forward ten seconds"
+                android:text="+10s"
+                android:textColor="@color/zf_text"
+                android:textSize="12sp"
+                app:strokeColor="@color/zf_glass_stroke" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSubtitles"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="wrap_content"

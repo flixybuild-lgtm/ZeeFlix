@@ -43,17 +43,6 @@
             android:textSize="22sp"
             android:textStyle="bold" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnQuickAddProvider"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:text="Enter provider HTTPS"
-            android:textColor="?attr/zfAccent"
-            android:textSize="12sp"
-            app:backgroundTint="?attr/zfGlassFill" />
     </LinearLayout>
 
     <FrameLayout
