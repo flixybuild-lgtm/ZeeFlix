@@ -146,7 +146,7 @@ cd android
 
 Requires Node 22, Java 17 and Android build tools. Minimum supported Android version is 9 (API 28).
 
-Or skip the toolchain entirely: **Actions → “Publish Framewave APK & Screenshots” → Run workflow.** CI builds the APK, captures fresh screenshots, renders the marketing images and attaches everything to a GitHub Release.
+Or skip the toolchain entirely: **Actions → “Publish Framewave APK” → Run workflow.** CI builds and verifies the Android APK, checks the app ID/signature/alignment, creates a SHA-256 manifest, and publishes the APK with its license notices on GitHub Releases.
 
 ---
 

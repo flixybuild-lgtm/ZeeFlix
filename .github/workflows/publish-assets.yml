@@ -1,4 +1,4 @@
-name: Publish Framewave APK & Screenshots
+name: Publish Framewave APK
 on:
   workflow_dispatch:
     inputs:
@@ -42,15 +42,8 @@ jobs:
           cargo test --locked
           npm ci --ignore-scripts
           npm run build
-      - name: Generate screenshots and marketing assets
-        run: |
-          ./node_modules/.bin/playwright install --with-deps chromium
-          npm run screenshots
-          node -e "if(require('./test-results/screenshots-report.json').failed)process.exit(1)"
-          pip install pillow fonttools brotli
-          npm run marketing
-          npm run demo
-          npm run test:web
+      - name: Run web regression checks
+        run: npm run test:web
       - name: Install Android app dependencies
         working-directory: android-app
         run: npm ci
@@ -67,7 +60,7 @@ jobs:
       - name: Test and assemble APK
         working-directory: android-app/android
         run: ./gradlew testDebugUnitTest assembleDebug --no-daemon
-      - name: Publish verified build and captures
+      - name: Publish verified APK release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.release_tag }}
@@ -86,9 +79,4 @@ jobs:
           cp android-app/LICENSE release/Framewave-Android-LICENSE.txt
           cp android-app/NOTICE release/Framewave-Android-NOTICE.txt
           (cd release && sha256sum *.apk > SHA256SUMS.txt)
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add docs/screenshots docs/marketing public/screenshots
-          git diff --cached --quiet || git commit -m "Refresh Framewave screenshots for $TAG"
-          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
-          gh release create "$TAG" release/* docs/screenshots/{home-desktop,provider-entry-mobile}.png --target "$(git rev-parse HEAD)" --title "Framewave $TAG — Android and web" --notes-file docs/RELEASE_NOTES_TEMPLATE.md --latest
+          gh release create "$TAG" release/* docs/screenshots/{home-desktop,provider-entry-mobile}.png --target "$(git rev-parse HEAD)" --title "Framewave $TAG — Android APK" --notes-file docs/RELEASE_NOTES_TEMPLATE.md --latest
