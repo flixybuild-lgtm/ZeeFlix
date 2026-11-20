@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180">
+  <rect width="320" height="180" rx="20" fill="#101818"/>
+  <image href="framewave-icon.png" x="24" y="34" width="112" height="112"/>
+  <text x="151" y="104" fill="#F2F7F6" font-family="sans-serif" font-size="25" font-weight="700">Framewave</text>
+</svg>

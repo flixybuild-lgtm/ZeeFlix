@@ -1,4 +1,4 @@
-name: Build ZeeFlix Android APK
+name: Build Framewave Android APK
 
 on:
   workflow_dispatch:
@@ -21,44 +21,52 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: android-app/package-lock.json
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.10.2"
+      - name: Install Android app dependencies
+        working-directory: android-app
+        run: npm ci
+
+      - name: Generate the Expo Android project
+        working-directory: android-app
+        run: npm run build:sandbox && npx expo prebuild --platform android --clean --no-install
 
       - name: Run Android unit tests, lint and build the APK
-        working-directory: android
-        run: gradle testDebugUnitTest lintDebug assembleDebug --no-daemon
+        working-directory: android-app/android
+        run: ./gradlew testDebugUnitTest lintDebug assembleDebug --no-daemon
 
-      - name: Verify the APK (manifest, ABI, signature, alignment)
+      - name: Verify the APK (package, signature, alignment)
         run: |
           set -euo pipefail
-          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          APK="android-app/android/app/build/outputs/apk/debug/app-debug.apk"
           test -f "$APK"
-          echo "## APK file"
           ls -lh "$APK"
           sha256sum "$APK"
           BT="$(ls -1 "$ANDROID_HOME"/build-tools | sort -V | tail -1)"
-          echo "## build-tools $BT"
           "$ANDROID_HOME/build-tools/$BT/aapt2" dump badging "$APK" > badging.txt
           grep -E "^(package|sdkVersion|targetSdkVersion|application-label|launchable-activity|native-code)" badging.txt || true
-          echo "## signature"
+          grep -q "package: name='com.zeeflix.app'" badging.txt
           "$ANDROID_HOME/build-tools/$BT/apksigner" verify --print-certs "$APK"
-          echo "## alignment"
-          "$ANDROID_HOME/build-tools/$BT/zipalign" -c 4 "$APK" && echo "zipalign OK"
+          "$ANDROID_HOME/build-tools/$BT/zipalign" -c 4 "$APK"
 
-      - name: Upload ZeeFlix Android APK
+      - name: Upload Framewave Android APK
         uses: actions/upload-artifact@v4
         with:
-          name: ZeeFlix-Android-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: Framewave-Android-APK
+          path: |
+            android-app/android/app/build/outputs/apk/debug/app-debug.apk
+            android-app/LICENSE
+            android-app/NOTICE
 
-      # Optional manual publish: gives the owner a plain download URL without keeping a
-      # 45 MB binary in the default branch. Delete the branch when it is no longer needed.
       - name: Publish APK download branch
         if: github.event_name == 'workflow_dispatch' && inputs.publish_download_branch
         run: |
@@ -67,9 +75,9 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           mkdir -p artifacts
-          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/ZeeFlix-1.0.0-debug.apk
+          cp android-app/android/app/build/outputs/apk/debug/app-debug.apk artifacts/Framewave-1.3.0-debug.apk
           git checkout -B "$BRANCH"
-          git add artifacts/ZeeFlix-1.0.0-debug.apk
-          git commit -m "CI: publish ZeeFlix debug APK (run ${{ github.run_id }})"
+          git add artifacts/Framewave-1.3.0-debug.apk
+          git commit -m "CI: publish Framewave 1.3.0 debug APK (run ${{ github.run_id }})"
           git push -f origin "HEAD:refs/heads/$BRANCH"
-          echo "Published to https://github.com/${{ github.repository }}/raw/$BRANCH/artifacts/ZeeFlix-1.0.0-debug.apk"
+          echo "Published to https://github.com/${{ github.repository }}/raw/$BRANCH/artifacts/Framewave-1.3.0-debug.apk"
