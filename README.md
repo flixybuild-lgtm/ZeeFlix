@@ -135,9 +135,12 @@ npm run test:browser   # Playwright end-to-end suite
 cd android-app
 npm ci
 npm run build:sandbox
+npx tsc --noEmit
+npm run lint
+npx jest __tests__/manifestProviderPath.test.ts __tests__/settingsStorage.test.ts --runInBand
 npx expo prebuild --platform android --clean --no-install
 cd android
-./gradlew testDebugUnitTest lintDebug assembleDebug --no-daemon
+./gradlew testDebugUnitTest assembleDebug --no-daemon
 # → android-app/android/app/build/outputs/apk/debug/app-debug.apk
 ```
 

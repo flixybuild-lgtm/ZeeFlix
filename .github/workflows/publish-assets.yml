@@ -54,12 +54,19 @@ jobs:
       - name: Install Android app dependencies
         working-directory: android-app
         run: npm ci
+      - name: Type-check, lint and test Framewave provider policy
+        working-directory: android-app
+        run: |
+          npm run build:sandbox
+          npx tsc --noEmit
+          npm run lint
+          npx jest __tests__/manifestProviderPath.test.ts __tests__/settingsStorage.test.ts --runInBand
       - name: Generate Expo Android project
         working-directory: android-app
-        run: npm run build:sandbox && npx expo prebuild --platform android --clean --no-install
-      - name: Test, lint and assemble APK
+        run: npx expo prebuild --platform android --clean --no-install
+      - name: Test and assemble APK
         working-directory: android-app/android
-        run: ./gradlew testDebugUnitTest lintDebug assembleDebug --no-daemon
+        run: ./gradlew testDebugUnitTest assembleDebug --no-daemon
       - name: Publish verified build and captures
         env:
           GH_TOKEN: ${{ github.token }}

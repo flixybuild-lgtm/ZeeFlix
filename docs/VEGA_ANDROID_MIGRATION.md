@@ -34,9 +34,12 @@ This is an extension integration, not a hosted bridge service. It needs network 
 cd android-app
 npm ci
 npm run build:sandbox
+npx tsc --noEmit
+npm run lint
+npx jest __tests__/manifestProviderPath.test.ts __tests__/settingsStorage.test.ts --runInBand
 npx expo prebuild --platform android --clean --no-install
 cd android
-./gradlew testDebugUnitTest lintDebug assembleDebug --no-daemon
+./gradlew testDebugUnitTest assembleDebug --no-daemon
 ```
 
 Requires Node 22, Java 17, and Android SDK/build tools. GitHub Actions runs this build for PRs and `main`. Build output: `android-app/android/app/build/outputs/apk/debug/app-debug.apk`.

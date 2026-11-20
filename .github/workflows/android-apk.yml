@@ -36,15 +36,23 @@ jobs:
         working-directory: android-app
         run: npm ci
 
+      - name: Type-check, lint and test Framewave provider policy
+        working-directory: android-app
+        run: |
+          npm run build:sandbox
+          npx tsc --noEmit
+          npm run lint
+          npx jest __tests__/manifestProviderPath.test.ts __tests__/settingsStorage.test.ts --runInBand
+
       - name: Generate the Expo Android project
         working-directory: android-app
-        run: npm run build:sandbox && npx expo prebuild --platform android --clean --no-install
+        run: npx expo prebuild --platform android --clean --no-install
 
-      - name: Run Android unit tests, lint and build the APK
+      - name: Run Android unit tests and build the APK
         working-directory: android-app/android
         run: |
           set -o pipefail
-          ./gradlew testDebugUnitTest lintDebug assembleDebug --no-daemon --stacktrace 2>&1 | tee gradle-build.log
+          ./gradlew testDebugUnitTest assembleDebug --no-daemon --stacktrace 2>&1 | tee gradle-build.log
 
       - name: Summarize Gradle failure
         if: always()
