@@ -141,7 +141,7 @@ npx jest __tests__/manifestProviderPath.test.ts __tests__/settingsStorage.test.t
 npx expo prebuild --platform android --clean --no-install
 cd android
 ./gradlew testDebugUnitTest assembleDebug --no-daemon
-# → android-app/android/app/build/outputs/apk/debug/app-debug.apk
+# → android-app/android/app/build/outputs/apk/debug/vega-debug.apk
 ```
 
 Requires Node 22, Java 17 and Android build tools. Minimum supported Android version is 9 (API 28).

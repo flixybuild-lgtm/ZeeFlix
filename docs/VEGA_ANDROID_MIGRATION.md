@@ -42,7 +42,7 @@ cd android
 ./gradlew testDebugUnitTest assembleDebug --no-daemon
 ```
 
-Requires Node 22, Java 17, and Android SDK/build tools. GitHub Actions runs this build for PRs and `main`. Build output: `android-app/android/app/build/outputs/apk/debug/app-debug.apk`.
+Requires Node 22, Java 17, and Android SDK/build tools. GitHub Actions runs this build for PRs and `main`. Build output: `android-app/android/app/build/outputs/apk/debug/vega-debug.apk`.
 
 ## Readiness and security
 
