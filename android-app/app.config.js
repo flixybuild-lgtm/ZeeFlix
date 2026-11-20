@@ -25,6 +25,7 @@ module.exports = () => {
   const PACKAGE_NAME = 'com.zeeflix.app';
   const APP_SCHEME = 'framewave';
   const plugins = [
+    './plugins/with-empty-android-tests.js',
     './plugins/with-framewave-notices.js',
     './plugins/with-custom-native-modules.js',
       [
