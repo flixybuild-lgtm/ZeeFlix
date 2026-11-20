@@ -24,7 +24,7 @@
             android:id="@+id/bridgeConnect"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Connect bridge" />
+            android:text="Connect Zenda-Cross" />
         <TextView
             android:id="@+id/bridgeStatus"
             android:layout_width="match_parent"

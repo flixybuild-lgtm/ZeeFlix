@@ -18,6 +18,12 @@ class LibraryStore private constructor(context: Context) {
     private val prefs = appCtx.getSharedPreferences("zeeflix_state_v1", Context.MODE_PRIVATE)
     private val builtInFilms: List<Film> = loadCatalog()
 
+    init {
+        // Drop legacy arbitrary-URL provider entries from older releases. Zenda-Cross
+        // remains the only configurable provider connection in this app version.
+        prefs.edit().remove("providers_json").apply()
+    }
+
     private val bitmapCache = object : LruCache<String, Bitmap>(24 * 1024 * 1024) {
         override fun sizeOf(key: String, value: Bitmap): Int = value.byteCount
     }
@@ -37,6 +43,10 @@ class LibraryStore private constructor(context: Context) {
     var autoplayEnabled: Boolean
         get() = prefs.getBoolean("autoplay_enabled", true)
         set(value) = prefs.edit().putBoolean("autoplay_enabled", value).apply()
+
+    var allowAdultResults: Boolean
+        get() = prefs.getBoolean("allow_adult_results", false)
+        set(value) = prefs.edit().putBoolean("allow_adult_results", value).apply()
 
     var themeName: String
         get() = prefs.getString("theme_name", "cinema") ?: "cinema"
@@ -233,6 +243,10 @@ class LibraryStore private constructor(context: Context) {
 
     fun clearHistory() {
         saveHistory(emptyList())
+    }
+
+    fun clearAppData() {
+        prefs.edit().clear().apply()
     }
 
     fun getDownloads(): List<DownloadRecord> {

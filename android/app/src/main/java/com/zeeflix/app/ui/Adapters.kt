@@ -8,12 +8,9 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.materialswitch.MaterialSwitch
 import com.zeeflix.app.R
 import com.zeeflix.app.data.LibraryStore
 import com.zeeflix.app.model.Film
-import com.zeeflix.app.model.ProbeResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -131,99 +128,5 @@ class ShelfAdapter(
             recycler.layoutManager = LinearLayoutManager(v.context, LinearLayoutManager.HORIZONTAL, false)
             recycler.adapter = adapter
         }
-    }
-}
-
-data class ProviderRow(
-    val id: String,
-    val name: String,
-    val format: String,
-    val url: String,
-    val enabled: Boolean,
-    val custom: Boolean
-)
-
-class ProviderAdapter(
-    private val onToggle: (ProviderRow) -> Unit,
-    private val onTest: (ProviderRow) -> Unit,
-    private val onWatch: (ProviderRow) -> Unit,
-    private val onEdit: (ProviderRow) -> Unit,
-    private val onDelete: (ProviderRow) -> Unit
-) : RecyclerView.Adapter<ProviderAdapter.VH>() {
-
-    private var rows: List<ProviderRow> = emptyList()
-    private val probes = mutableMapOf<String, ProbeResult>()
-
-    fun submit(list: List<ProviderRow>) {
-        rows = list
-        notifyDataSetChanged()
-    }
-
-    fun setProbe(id: String, result: ProbeResult) {
-        probes[id] = result
-        notifyDataSetChanged()
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_provider, parent, false)
-        return VH(v)
-    }
-
-    override fun onBindViewHolder(holder: VH, position: Int) {
-        val row = rows[position]
-        holder.name.text = row.name
-        val kindLabel = if (row.custom) row.format.uppercase() else "Built-in"
-        val probe = probes[row.id]
-        val statusText = when {
-            !row.enabled -> "$kindLabel · Disabled"
-            probe != null -> "$kindLabel · ${probe.label}"
-            else -> "$kindLabel · Ready"
-        }
-        holder.status.text = statusText
-        val colorRes = when {
-            !row.enabled || probe?.ok == null -> R.attr.zfMuted
-            probe.ok == true -> R.attr.zfOk
-            else -> R.attr.zfBad
-        }
-        holder.status.setTextColor(holder.itemView.context.themeColor(colorRes))
-
-        holder.toggle.setOnCheckedChangeListener(null)
-        holder.toggle.isChecked = row.enabled
-        holder.toggle.setOnCheckedChangeListener { _, _ -> onToggle(row) }
-
-        holder.btnTest.isEnabled = row.enabled
-        holder.btnTest.setOnClickListener {
-            holder.status.text = "$kindLabel · Testing…"
-            onTest(row)
-        }
-
-        if (row.custom && row.enabled) {
-            holder.btnWatch.visibility = View.VISIBLE
-            holder.btnWatch.setOnClickListener { onWatch(row) }
-        } else {
-            holder.btnWatch.visibility = View.GONE
-        }
-
-        if (row.custom) {
-            holder.btnEdit.visibility = View.VISIBLE
-            holder.btnDelete.visibility = View.VISIBLE
-            holder.btnEdit.setOnClickListener { onEdit(row) }
-            holder.btnDelete.setOnClickListener { onDelete(row) }
-        } else {
-            holder.btnEdit.visibility = View.GONE
-            holder.btnDelete.visibility = View.GONE
-        }
-    }
-
-    override fun getItemCount(): Int = rows.size
-
-    class VH(v: View) : RecyclerView.ViewHolder(v) {
-        val name: TextView = v.findViewById(R.id.providerName)
-        val status: TextView = v.findViewById(R.id.providerStatus)
-        val toggle: MaterialSwitch = v.findViewById(R.id.providerSwitch)
-        val btnWatch: MaterialButton = v.findViewById(R.id.btnProviderWatch)
-        val btnTest: MaterialButton = v.findViewById(R.id.btnProviderTest)
-        val btnEdit: MaterialButton = v.findViewById(R.id.btnProviderEdit)
-        val btnDelete: MaterialButton = v.findViewById(R.id.btnProviderDelete)
     }
 }

@@ -19,20 +19,17 @@ Investigation conducted across official GitHub Education documentation (`educati
 
 ## 2. Deployment Status
 
-- **Repository:** `https://github.com/flixybuild-lgtm/ZeeFlix` (currently **private**, `has_pages: false`).
-- **GitHub Actions Workflow:** Created `.github/workflows/ci-pages.yml` to run `cargo fmt --check`, `cargo clippy`, `cargo test`, `npm run test:web`, `npm run build`, and deploy `dist/` via `actions/deploy-pages@v4`.
-- **Live URL Check:** `https://flixybuild-lgtm.github.io/ZeeFlix/` returned **HTTP 404 ("There isn't a GitHub Pages site here")** because the sandbox integration token received `HTTP 403 Resource not accessible by integration` when attempting to set repository visibility to public or enable GitHub Pages.
-- **Local Preview:** Verified running locally on `0.0.0.0:4173` (and tested at both `/` and `/ZeeFlix/`).
+- **Repository:** `https://github.com/flixybuild-lgtm/ZeeFlix` (public).
+- **GitHub Actions Workflow:** `.github/workflows/ci-pages.yml` builds and tests the static site, keeps a downloadable `Framewave-static-site` artifact, and deploys `dist/` with `actions/deploy-pages@v4` when Pages is configured.
+- **Live URL check (2026-11-19):** `https://flixybuild-lgtm.github.io/ZeeFlix/` returned GitHub's standard Pages **404**. The repository Pages API returned 404 (site not configured). Creating the Pages site via the connected GitHub integration was denied with `403 Resource not accessible by integration`; no repository setting was changed.
+- **Local preview:** `npm run dev` serves the built site on `0.0.0.0:4173`, including the `/ZeeFlix/` path.
 
 ## 3. Remaining External Actions Required from Owner
 
-1. **GitHub Repository Visibility, Name & Pages Enablement:**
-   - Open `https://github.com/flixybuild-lgtm/ZeeFlix/settings`:
-     - (Optional, per spec) Rename repository from `ZeeFlix` to `zeeflix` if desired (`https://flixybuild-lgtm.github.io/zeeflix/`).
-     - Change repository visibility to **Public** (required for free GitHub Pages on a free GitHub account).
-     - Merge/push branch `arena/f6d8c849-zeeflix` into `main`.
-   - Open **Settings → Pages**, set **Source** to **GitHub Actions**, and run/wait for the **Build, Test, and Deploy ZeeFlix** workflow to complete.
-   - Verify the live `https://flixybuild-lgtm.github.io/ZeeFlix/` (or `/zeeflix/`) URL opens with HTTPS.
+1. **Enable GitHub Pages (required to fix the public 404):**
+   - Open `https://github.com/flixybuild-lgtm/ZeeFlix/settings/pages` while signed into an account with repository admin access.
+   - Under **Build and deployment**, select **GitHub Actions** as the source, then rerun the **Build, Test, and Deploy ZeeFlix** workflow (or merge this active branch so the `main` workflow runs).
+   - Wait for the deployment job to complete, then open `https://flixybuild-lgtm.github.io/ZeeFlix/`. Until Pages is enabled and deployed, GitHub itself serves the 404 page; an app-side code change cannot replace that response.
 
 2. **GitHub Student Developer Pack Verification & Domain Claim (Optional $0 Custom Domain):**
    - Apply at `https://github.com/settings/education/benefits` using legitimate school-issued documentation for **Zeeshan Haider** (**9th Class**, **Government High School No. 1**) such as a dated student ID, class schedule, transcript, or official enrollment letter.

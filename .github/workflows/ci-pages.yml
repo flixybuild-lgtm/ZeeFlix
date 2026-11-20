@@ -106,6 +106,14 @@ jobs:
           ! grep -rq "{{" dist/index.html dist/title/sintel.html
           echo "install + crawl surface OK"
 
+      - name: Keep a downloadable static-site build even if Pages is not configured
+        uses: actions/upload-artifact@v4
+        with:
+          name: Framewave-static-site
+          path: dist
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Check whether GitHub Pages is available
         id: pages
         if: github.event_name != 'pull_request'
@@ -120,7 +128,7 @@ jobs:
             echo "::notice::GitHub Pages is configured; deploying."
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::GitHub Pages is not enabled for this repository. Settings -> Pages -> Source: GitHub Actions (the repository must be public on the free plan). The built site is attached to this run as the 'github-pages' artifact."
+            echo "::warning::The GitHub Pages site is not configured. The public URL will return GitHub's 404 until an administrator opens Settings -> Pages, selects GitHub Actions, and reruns this workflow. The repository must be public for Pages on GitHub Free."
           fi
 
       - name: Setup Pages

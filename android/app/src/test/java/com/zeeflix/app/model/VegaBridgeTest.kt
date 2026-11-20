@@ -12,6 +12,13 @@ class VegaBridgeTest {
         assertEquals("https://bridge.example/config/stream/series/tt1234567:1:2.json", VegaBridge.streamUrl(manifest, " tt1234567:1:2 "))
     }
 
+    @Test fun explicitlyMarkedAdultResultsAreRecognized() {
+        assertEquals(true, VegaBridge.isAdultMarked("18+ source", "", false))
+        assertEquals(true, VegaBridge.isAdultMarked("Source", "mature content", false))
+        assertEquals(true, VegaBridge.isAdultMarked("Source", "", true))
+        assertEquals(false, VegaBridge.isAdultMarked("Family film", "1080p", false))
+    }
+
     @Test fun rejectsUnsafeManifestUrlsAndNonEpisodeIds() {
         val invalid = listOf("http://bridge.example/manifest.json", "https://user@bridge.example/manifest.json",
             "https://bridge.example/manifest.json?token=1", "https://github.com/Zenda-Cross/vega-providers")

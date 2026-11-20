@@ -12,8 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.CheckBox
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
@@ -39,9 +37,6 @@ import com.zeeflix.app.databinding.FragmentSearchBinding
 import com.zeeflix.app.model.CatalogParser
 import com.zeeflix.app.model.Film
 import com.zeeflix.app.model.Filter
-import com.zeeflix.app.model.Provider
-import com.zeeflix.app.model.SourceValidator
-import com.zeeflix.app.net.ProviderClient
 import com.zeeflix.app.net.VegaBridge
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -285,7 +280,6 @@ class SearchFragment : Fragment() {
 class ProvidersFragment : Fragment() {
     private var _binding: FragmentProvidersBinding? = null
     private val binding get() = _binding!!
-    private lateinit var adapter: ProviderAdapter
     private var vegaDialog: AlertDialog? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -294,46 +288,8 @@ class ProvidersFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val store = LibraryStore.get(requireContext())
-        adapter = ProviderAdapter(
-            onToggle = { row ->
-                store.toggleProvider(row.id)
-                refresh()
-            },
-            onTest = { row ->
-                viewLifecycleOwner.lifecycleScope.launch {
-                    val result = ProviderClient.probe(requireContext(), row.format, row.url)
-                    adapter.setProbe(row.id, result)
-                }
-            },
-            onWatch = { row ->
-                store.find(row.id)?.let { openPlayer(requireContext(), it) }
-            },
-            onEdit = { row ->
-                val existing = store.getProviders().firstOrNull { it.id == row.id }
-                openProviderDialog(existing)
-            },
-            onDelete = { row ->
-                AlertDialog.Builder(requireContext())
-                    .setTitle("Remove provider?")
-                    .setMessage("Remove ${row.name} and its saved watch progress?")
-                    .setNegativeButton("Cancel", null)
-                    .setPositiveButton("Remove") { _, _ ->
-                        store.deleteProvider(row.id)
-                        refresh()
-                    }
-                    .show()
-            }
-        )
-        binding.providersRecycler.layoutManager = LinearLayoutManager(requireContext())
-        binding.providersRecycler.adapter = adapter
-        binding.btnAddProvider.setOnClickListener { openAddDialog() }
+        LibraryStore.get(requireContext()) // Initialize the current local store and apply provider migration.
         binding.btnVegaBridge.setOnClickListener { showVegaBridge() }
-        refresh()
-    }
-
-    fun openAddDialog() {
-        openProviderDialog(null)
     }
 
     private fun showVegaBridge() {
@@ -402,7 +358,7 @@ class ProvidersFragment : Fragment() {
             val id = form.bridgeTitleId.text.toString().trim()
             form.bridgeResults.removeAllViews()
             load("Looking up streams…") {
-                val streams = VegaBridge.streams(store.vegaBridge, id)
+                val streams = VegaBridge.streams(store.vegaBridge, id, store.allowAdultResults)
                 form.bridgeStatus.text = if (streams.isEmpty()) "No compatible HTTPS streams found." else "${streams.size} compatible stream(s) found."
                 streams.forEach { stream ->
                     form.bridgeResults.addView(MaterialButton(context).apply {
@@ -422,68 +378,6 @@ class ProvidersFragment : Fragment() {
         dialog.setOnDismissListener { request?.cancel(); vegaDialog = null }
         vegaDialog = dialog
         dialog.show()
-    }
-
-    private fun openProviderDialog(existing: Provider?) {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_add_provider, null)
-        val nameInput = dialogView.findViewById<EditText>(R.id.inputProviderName)
-        val formatSpinner = dialogView.findViewById<Spinner>(R.id.spinnerProviderFormat)
-        val urlInput = dialogView.findViewById<EditText>(R.id.inputProviderUrl)
-        val dlCheck = dialogView.findViewById<CheckBox>(R.id.checkProviderDownload)
-        val rightsCheck = dialogView.findViewById<CheckBox>(R.id.checkProviderRights)
-        val errText = dialogView.findViewById<TextView>(R.id.textProviderError)
-
-        val formats = listOf("auto") + SourceValidator.SUPPORTED_FORMATS
-        formatSpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, formats.map { it.uppercase() })
-        if (existing != null) {
-            nameInput.setText(existing.name)
-            urlInput.setText(existing.url)
-            dlCheck.isChecked = existing.download
-            formatSpinner.setSelection(formats.indexOf(existing.format).coerceAtLeast(0))
-        }
-
-        val dialog = AlertDialog.Builder(requireContext())
-            .setTitle(if (existing == null) "Enter provider HTTPS" else "Edit Provider")
-            .setView(dialogView)
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Save & Watch", null)
-            .create()
-
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val validated = SourceValidator.validateProvider(
-                    name = nameInput.text.toString(),
-                    url = urlInput.text.toString(),
-                    format = formats[formatSpinner.selectedItemPosition],
-                    allowDownload = dlCheck.isChecked,
-                    rightsConfirmed = rightsCheck.isChecked
-                )
-                validated.onFailure {
-                    errText.text = it.message
-                }.onSuccess { provider ->
-                    val saved = LibraryStore.get(requireContext()).saveProvider(provider, existing?.id.orEmpty())
-                    saved.onFailure { errText.text = it.message }
-                        .onSuccess { created ->
-                            dialog.dismiss()
-                            refresh()
-                            openPlayer(requireContext(), created.toFilm())
-                        }
-                }
-            }
-        }
-        dialog.show()
-    }
-
-    private fun refresh() {
-        val store = LibraryStore.get(requireContext())
-        val rows = buildList {
-            add(ProviderRow("local", "Framewave Library (Bundled Sintel)", "local", "media/sintel.webm", store.localEnabled, false))
-            add(ProviderRow("blender", "Blender Open Movies", "peer", "8533ea43-4271-4a57-9694-e9d0b35e1aa1", store.blenderEnabled, false))
-            store.getProviders().forEach {
-                add(ProviderRow(it.id, it.name, it.format, it.url, it.enabled, true))
-            }
-        }
-        adapter.submit(rows)
     }
 
     override fun onDestroyView() {
@@ -616,6 +510,12 @@ class LibraryFragment : Fragment() {
         }
         addToggle("Show opening splash animation", store.splashEnabled) { store.splashEnabled = it }
         addToggle("Auto-play next episode", store.autoplayEnabled) { store.autoplayEnabled = it }
+        addToggle("Allow results marked 18+ (off by default)", store.allowAdultResults) { store.allowAdultResults = it }
+        layout.addView(TextView(requireContext()).apply {
+            text = "Only provider results explicitly labelled 18+ or adult are filtered. Provider labels are not verified; this is not a parental lock."
+            setTextColor(requireContext().themeColor(R.attr.zfMuted))
+            setPadding(12, 0, 12, 12)
+        })
         layout.addView(MaterialButton(requireContext()).apply {
             val current = LiquidTheme.current(requireContext())
             text = "Theme · ${current.label}"
@@ -644,6 +544,20 @@ class LibraryFragment : Fragment() {
                 }
             }
         )
+        layout.addView(MaterialButton(requireContext()).apply {
+            text = "Reset app data"
+            setOnClickListener {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Reset this device?")
+                    .setMessage("This clears your history, lists, preferences and saved Zenda-Cross connection. Downloaded files managed by Android are not deleted.")
+                    .setNegativeButton("Cancel", null)
+                    .setPositiveButton("Reset") { _, _ ->
+                        store.clearAppData()
+                        requireActivity().recreate()
+                    }
+                    .show()
+            }
+        })
         container.addView(layout)
     }
 
