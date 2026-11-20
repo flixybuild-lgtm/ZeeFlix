@@ -57,6 +57,17 @@ jobs:
               tail -n 120 gradle-build.log
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
+            python3 - <<'PY'
+          import pathlib, re
+          lines = pathlib.Path('gradle-build.log').read_text(errors='replace').splitlines()
+          pattern = re.compile(r'FAILURE:|What went wrong:|Execution failed for task|Could not resolve|Could not find|^e: |^.* FAILED$|^Caused by:|error:')
+          selected = [line for line in lines if pattern.search(line)]
+          if not selected:
+              selected = lines[-25:]
+          for line in selected[-25:]:
+              safe = line.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+              print(f'::error title=Gradle diagnostic::{safe}')
+          PY
           fi
 
       - name: Verify the APK (package, signature, alignment)
