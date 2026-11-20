@@ -8,7 +8,7 @@ This release replaces the Android app engine with a Framewave-branded adaptation
 - **Settings carried forward:** explicit 18+ results remain opt-in and are filtered only when the provider labels them; watch progress/history can be cleared in Data Management.
 - **Upgrade note:** the prior Kotlin app's watch history, favorites and settings are not automatically imported to the new MMKV-based app. Record anything important before updating; the legacy data may remain in private app storage but is not shown in Framewave.
 - **Website:** remains a separate Rust/WebAssembly application with its existing bridge requirements.
-- **Compatibility:** Android 9+ (API 28), arm64-v8a and armeabi-v7a. This is a debug-signed sideload build, not a Play Store release.
+- **Compatibility and signing:** Android 9+ (API 28), arm64-v8a and armeabi-v7a. This is a CI-verified, debug-signed sideload build, not a Play Store or production-key release. CI verifies the application ID, APK signature and ZIP alignment and publishes SHA-256 checksums. A later CI run may have a different debug signing key; if Android rejects an in-place update, back up anything important and uninstall the previous APK first (this erases app-local data).
 
 **License:** the Android source includes Vega code at upstream commit `fb0e51110c1a55e138628828c58236aa20d3b282` under PolyForm Noncommercial 1.0.0, with the upstream `LICENSE` and `NOTICE` retained. This build is for noncommercial use only. Commercial use, ads, monetization or commercial distribution needs separate permission from the licensor.
 
