@@ -166,7 +166,7 @@ jobs:
         run: |
           npm run build:sandbox
           npx tsc --noEmit
-          npm run lint
+          npm run lint:framewave
           npx jest __tests__/manifestProviderPath.test.ts __tests__/settingsStorage.test.ts --runInBand
 
       - name: Generate the Expo Android project

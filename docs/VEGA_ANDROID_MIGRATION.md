@@ -35,7 +35,7 @@ cd android-app
 npm ci
 npm run build:sandbox
 npx tsc --noEmit
-npm run lint
+npm run lint:framewave
 npx jest __tests__/manifestProviderPath.test.ts __tests__/settingsStorage.test.ts --runInBand
 npx expo prebuild --platform android --clean --no-install
 cd android

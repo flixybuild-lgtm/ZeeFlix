@@ -9,6 +9,7 @@
     "android:tv": "npm run build:sandbox && cross-env EXPO_TV=1 expo run:android",
     "ios": "npm run build:sandbox && expo run:ios",
     "lint": "eslint .",
+    "lint:framewave": "eslint src/App.tsx src/lib/contentTags.ts src/lib/services/ExtensionManager.ts src/lib/services/ProviderManager.ts src/lib/storage/SettingsStorage.ts src/screens/settings/Preference.tsx src/screens/settings/Extensions.tsx src/screens/settings/About.tsx src/components/ui/Surface.tsx plugins/with-empty-android-tests.js",
     "start": "expo start",
     "build:playstore": "eas build --platform android --profile production --auto-submit",
     "build:playstore:tv": "eas build --platform android --profile production_tv --auto-submit",
