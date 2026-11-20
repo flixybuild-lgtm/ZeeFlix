@@ -1,3 +1,5 @@
+> **Historical document:** this audit concerns the retired Kotlin/Media3 Android implementation from November 2026. Since Framewave 1.3.0, the Android app is built from `android-app/` (React Native / Expo) with minimum Android API 28. This document is not a current audit of the new Android engine.
+
 # ZeeFlix Native Android — Audit, Fixes and APK Delivery
 
 Date: 2026-11-18

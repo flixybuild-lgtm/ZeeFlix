@@ -1,4 +1,4 @@
-name: Build ZeeFlix Android APK
+name: Build Framewave Android APK
 
 on:
   workflow_dispatch:
@@ -21,6 +21,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: android-app/package-lock.json
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -30,35 +36,86 @@ jobs:
         with:
           gradle-version: "8.10.2"
 
-      - name: Run Android unit tests, lint and build the APK
-        working-directory: android
-        run: gradle testDebugUnitTest lintDebug assembleDebug --no-daemon
+      - name: Install Android app dependencies
+        working-directory: android-app
+        run: npm ci
 
-      - name: Verify the APK (manifest, ABI, signature, alignment)
+      - name: Type-check, lint and test Framewave provider policy
+        working-directory: android-app
+        run: |
+          npm run build:sandbox
+          npx tsc --noEmit
+          npm run lint:framewave
+          npx jest __tests__/manifestProviderPath.test.ts __tests__/settingsStorage.test.ts --runInBand
+
+      - name: Generate the Expo Android project
+        working-directory: android-app
+        run: npx expo prebuild --platform android --clean --no-install
+
+      - name: Run Android unit tests and build the APK
+        working-directory: android-app/android
+        run: |
+          set -o pipefail
+          ./gradlew testDebugUnitTest assembleDebug --no-daemon --stacktrace 2>&1 | tee gradle-build.log
+
+      - name: Summarize Gradle failure
+        if: always()
+        working-directory: android-app/android
+        run: |
+          if [ -f gradle-build.log ] && [ "${{ job.status }}" = "failure" ]; then
+            {
+              echo '## Android Gradle failure (last 120 lines)'
+              echo '```text'
+              tail -n 120 gradle-build.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            python3 - <<'PY'
+          import pathlib, re
+          lines = pathlib.Path('gradle-build.log').read_text(errors='replace').splitlines()
+          pattern = re.compile(r'FAILURE:|What went wrong:|Execution failed for task|Could not resolve|Could not find|^e: |^.* FAILED$|^Caused by:|error:')
+          selected = [line for line in lines if pattern.search(line)]
+          if not selected:
+              selected = lines[-25:]
+          for line in selected[-25:]:
+              safe = line.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+              print(f'::error title=Gradle diagnostic::{safe}')
+          PY
+          fi
+
+      - name: Verify the APK (package, signature, alignment)
         run: |
           set -euo pipefail
-          APK="android/app/build/outputs/apk/debug/app-debug.apk"
-          test -f "$APK"
-          echo "## APK file"
+          fail() { echo "::error title=APK verification::$1"; exit 1; }
+          APK="android-app/android/app/build/outputs/apk/debug/vega-debug.apk"
+          test -f "$APK" || fail "APK output missing: $APK"
           ls -lh "$APK"
           sha256sum "$APK"
           BT="$(ls -1 "$ANDROID_HOME"/build-tools | sort -V | tail -1)"
-          echo "## build-tools $BT"
-          "$ANDROID_HOME/build-tools/$BT/aapt2" dump badging "$APK" > badging.txt
+          test -n "$BT" || fail "No Android build-tools installation found"
+          AAPT="$ANDROID_HOME/build-tools/$BT/aapt2"
+          if ! "$AAPT" dump badging "$APK" > badging.txt 2> badging-error.txt; then
+            fail "aapt2 could not inspect the APK: $(cat badging-error.txt)"
+          fi
           grep -E "^(package|sdkVersion|targetSdkVersion|application-label|launchable-activity|native-code)" badging.txt || true
-          echo "## signature"
-          "$ANDROID_HOME/build-tools/$BT/apksigner" verify --print-certs "$APK"
-          echo "## alignment"
-          "$ANDROID_HOME/build-tools/$BT/zipalign" -c 4 "$APK" && echo "zipalign OK"
+          grep -q "package: name='com.zeeflix.app'" badging.txt || fail "Unexpected APK package: $(grep '^package:' badging.txt || echo no-package-record)"
+          if ! "$ANDROID_HOME/build-tools/$BT/apksigner" verify --print-certs "$APK" > signer.txt 2>&1; then
+            fail "APK signature verification failed: $(cat signer.txt)"
+          fi
+          cat signer.txt
+          if ! "$ANDROID_HOME/build-tools/$BT/zipalign" -c 4 "$APK" > alignment.txt 2>&1; then
+            fail "APK alignment verification failed: $(cat alignment.txt)"
+          fi
+          cat alignment.txt
 
-      - name: Upload ZeeFlix Android APK
+      - name: Upload Framewave Android APK
         uses: actions/upload-artifact@v4
         with:
-          name: ZeeFlix-Android-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: Framewave-Android-APK
+          path: |
+            android-app/android/app/build/outputs/apk/debug/vega-debug.apk
+            android-app/LICENSE
+            android-app/NOTICE
 
-      # Optional manual publish: gives the owner a plain download URL without keeping a
-      # 45 MB binary in the default branch. Delete the branch when it is no longer needed.
       - name: Publish APK download branch
         if: github.event_name == 'workflow_dispatch' && inputs.publish_download_branch
         run: |
@@ -67,9 +124,9 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           mkdir -p artifacts
-          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/ZeeFlix-1.0.0-debug.apk
+          cp android-app/android/app/build/outputs/apk/debug/vega-debug.apk artifacts/Framewave-1.3.0-debug.apk
           git checkout -B "$BRANCH"
-          git add artifacts/ZeeFlix-1.0.0-debug.apk
-          git commit -m "CI: publish ZeeFlix debug APK (run ${{ github.run_id }})"
+          git add artifacts/Framewave-1.3.0-debug.apk
+          git commit -m "CI: publish Framewave 1.3.0 debug APK (run ${{ github.run_id }})"
           git push -f origin "HEAD:refs/heads/$BRANCH"
-          echo "Published to https://github.com/${{ github.repository }}/raw/$BRANCH/artifacts/ZeeFlix-1.0.0-debug.apk"
+          echo "Published to https://github.com/${{ github.repository }}/raw/$BRANCH/artifacts/Framewave-1.3.0-debug.apk"

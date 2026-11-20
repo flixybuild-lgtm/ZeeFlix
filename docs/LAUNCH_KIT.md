@@ -1,3 +1,5 @@
+> **Historical launch copy:** this material describes the pre-1.3.0 Android app and is not current compatibility, feature, privacy, size, or licensing guidance. The Android engine is now a Vega-derived React Native / Expo app under PolyForm Noncommercial 1.0.0 (Android 9+); the web app is separate. See `VEGA_ANDROID_MIGRATION.md` and the current `README.md` before reusing any copy.
+
 # Framewave — Launch Kit
 
 Copy-paste launch material. Every image referenced here already exists in

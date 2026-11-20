@@ -6,21 +6,19 @@
 
 ### Cinema on your wavelength.
 
-**A streaming app for Android and the web — built from scratch by a 9th-class student.**
+**A streaming app for Android and the web — built and adapted by a 9th-class student.**
 
 [![Download APK](https://img.shields.io/badge/⬇_Download-Android_APK-f8b74f?style=for-the-badge&logo=android&logoColor=0b0c0f)](https://github.com/flixybuild-lgtm/ZeeFlix/releases/latest/download/ZeeFlix-latest.apk)
 [![Web App](https://img.shields.io/badge/▶_Open-Web_App-54bbef?style=for-the-badge&logo=googlechrome&logoColor=0b0c0f)](https://flixybuild-lgtm.github.io/ZeeFlix/)
 [![Install Page](https://img.shields.io/badge/📱_Install-Guide-bf7efb?style=for-the-badge&logo=readthedocs&logoColor=0b0c0f)](https://flixybuild-lgtm.github.io/ZeeFlix/install.html)
 
 [![Release](https://img.shields.io/github/v/release/flixybuild-lgtm/ZeeFlix?style=flat-square&color=f8b74f)](https://github.com/flixybuild-lgtm/ZeeFlix/releases)
-![Platforms](https://img.shields.io/badge/platforms-Android_7.0%2B_·_Web-15161a?style=flat-square)
-![Size](https://img.shields.io/badge/APK-45_MB-15161a?style=flat-square)
-![No tracking](https://img.shields.io/badge/trackers-0-6bdbab?style=flat-square)
+![Platforms](https://img.shields.io/badge/platforms-Android_9%2B_·_Web-15161a?style=flat-square)
 ![No ads](https://img.shields.io/badge/ads-none-6bdbab?style=flat-square)
-![License](https://img.shields.io/badge/code-MIT-6bdbab?style=flat-square)
+![License](https://img.shields.io/badge/license-mixed%20%2F%20noncommercial%20Android-6bdbab?style=flat-square)
 ![Films](https://img.shields.io/badge/films-Creative_Commons-9c9c9c?style=flat-square)
 
-**No account. No ads. No subscriptions. No trackers. Just films.**
+**No account. No ads. No subscriptions. Just films.**
 
 </div>
 
@@ -30,7 +28,7 @@
 
 | You want… | Do this |
 | :--- | :--- |
-| **Android app** | **[Download `ZeeFlix-latest.apk`](https://github.com/flixybuild-lgtm/ZeeFlix/releases/latest/download/ZeeFlix-latest.apk)** → open it → allow *install unknown apps* → Install. <br><sub>Android 7.0+ · 45 MB · arm64 + armv7</sub> |
+| **Android app** | **[Download `ZeeFlix-latest.apk`](https://github.com/flixybuild-lgtm/ZeeFlix/releases/latest/download/ZeeFlix-latest.apk)** → open it → allow *install unknown apps* → Install. <br><sub>Android 9+ (API 28) · arm64 + armv7</sub> |
 | **Nothing to install** | **[Open the web app](https://flixybuild-lgtm.github.io/ZeeFlix/)** — works in Chrome, Safari, Firefox, Edge. |
 | **Home-screen app** | Open the web app → browser menu → **Add to Home screen**. |
 | **Full walkthrough** | **[Install guide with screenshots, FAQ & checksums](https://flixybuild-lgtm.github.io/ZeeFlix/install.html)** |
@@ -42,11 +40,13 @@
 
 ## Connect Zenda-Cross
 
-Open **Providers → Connect Zenda-Cross** and enter the HTTPS `manifest.json` address of a running, trusted Zenda-Cross-compatible Vega bridge. Do not paste a GitHub repository URL or a video/streaming link: the repository is an extension index, not a bridge server. Enter an IMDb movie ID (`tt1234567`) or episode ID (`tt1234567:1:2`), confirm you have permission to watch, then choose **Find streams**. For web connections, the bridge must allow this app's origin with CORS. See the [Zenda-Cross bridge setup and troubleshooting guide](docs/VEGA_BRIDGE.md).
+**Android:** open **Settings → Providers** and install **VMovies**. Framewave preconfigures the official Zenda-Cross Vega provider source and exposes only that extension; there is no URL or JSON entry step. The extension is downloaded from Zenda-Cross at runtime, so first setup and updates need a network connection.
 
-Framewave now exposes Zenda-Cross as its only configurable provider. It does not take standalone media URLs, install extension code, or provide streams. In **Settings**, you can manage theme and playback options, turn on results explicitly marked 18+ (off by default), clear playback history, or reset all local app data including the saved bridge. The player supports quality and subtitle selection when the selected provider exposes them, playback speed, keyboard/touch seeking, fullscreen, picture-in-picture where supported, and resume position.
+**Web:** the website remains a separate Rust/WebAssembly app and keeps its existing bridge flow. It still needs a running, trusted, compatible HTTPS `manifest.json` endpoint with CORS; a GitHub repo or video link is not a bridge endpoint. See the [Zenda-Cross bridge setup and troubleshooting guide](docs/VEGA_BRIDGE.md).
 
-**Themes:** Choose **Dark**, **Light**, **Matrix**, or **Midnight blue** under Settings. Glass surfaces and subtle moving particles adapt to the palette. Particles stay still when the system requests reduced motion.
+In **Settings**, you can opt into explicitly tagged 18+ results (off by default), clear watch history, and manage playback, downloads, privacy and appearance. On Firebase-configured Android builds, usage/crash reporting is off by default and can be opted into. Glass-like translucent surfaces keep Framewave’s visual style while the Android app uses the React Native / Expo engine.
+
+**Android license:** the Vega-derived Android subtree is distributed under the upstream PolyForm Noncommercial License 1.0.0. This version is for noncommercial use only; monetization, ads, or commercial product use needs separate permission from Vega’s licensor. The web app and original repository code keep their own licenses. See [migration and license notes](docs/VEGA_ANDROID_MIGRATION.md).
 
 ## ▶️ See it move
 
@@ -64,16 +64,18 @@ Framewave now exposes Zenda-Cross as its only configurable provider. It does not
 <img src="docs/marketing/social-card.png" alt="Framewave desktop and mobile UI" width="100%">
 </div>
 
-- **A real app, not a template.** Kotlin + Jetpack + **AndroidX Media3 ExoPlayer** on Android; **Rust compiled to WebAssembly** on the web. Same catalogue, same design language, two engines.
+- **Two intentionally separate engines.** Framewave Android is a branded React Native / Expo adaptation of Vega; the website remains the independent Rust + WebAssembly app.
 - **Screening-room UI** with a mint signal mark, custom poster art and the Anton / Manrope / Bebas Neue type system. Light enough to load instantly, dense enough to feel like a paid product.
 - **Plays almost anything.** MP4, WebM, HLS and DASH with real quality switching, subtitle tracks, audio tracks, `0.5×–2×` speed, ±10 s double-tap seeking, Picture-in-Picture and resume-where-you-left-off.
-- **One provider connection.** Connect a trusted Zenda-Cross-compatible HTTPS bridge. Framewave does not accept arbitrary media URLs or install third-party extension code.
+- **One Android provider.** VMovies from the Zenda-Cross catalog is the only provider surfaced in the Android app. The web app keeps its own bridge requirements.
 - **Offline when permitted.** Authorized progressive files download through the Android `DownloadManager` with pause/resume; the web app streams with resumable byte ranges.
-- **Private by architecture.** No login, no analytics SDK, no ad network. Lists, favorites, watch positions and provider links live on your device.
+- **Local-first.** Watch progress, lists and preferences are stored on the device. Provider modules and their source websites are external network dependencies.
 
 ---
 
 ## 📸 Screenshots
+
+> **Refresh pending:** these mobile captures are from the previous Android engine. The Expo/Framewave UI has not yet completed an APK build in this sandbox; replace the mobile captures after the CI build is validated.
 
 <div align="center">
 
@@ -87,7 +89,7 @@ Framewave now exposes Zenda-Cross as its only configurable provider. It does not
 
 ### Desktop
 
-| Home & spotlight carousel | Custom HTML5 / Media3 player |
+| Home & spotlight carousel | Custom web player |
 | :---: | :---: |
 | <img src="docs/screenshots/home-desktop.png" alt="Framewave desktop home page"> | <img src="docs/screenshots/player-desktop.png" alt="Framewave desktop player"> |
 
@@ -127,15 +129,24 @@ npm run test:web       # unit tests (sources, downloads, player helpers)
 npm run test:browser   # Playwright end-to-end suite
 ```
 
-### Android — Kotlin + Media3
+### Android — React Native / Expo
 
 ```bash
+cd android-app
+npm ci
+npm run build:sandbox
+npx tsc --noEmit
+npm run lint:framewave
+npx jest __tests__/manifestProviderPath.test.ts __tests__/settingsStorage.test.ts --runInBand
+npx expo prebuild --platform android --clean --no-install
 cd android
-gradle testDebugUnitTest assembleDebug
-# → app/build/outputs/apk/debug/app-debug.apk
+./gradlew testDebugUnitTest assembleDebug --no-daemon
+# → android-app/android/app/build/outputs/apk/debug/vega-debug.apk
 ```
 
-Or skip the toolchain entirely: **Actions → “Publish Framewave APK & Screenshots” → Run workflow.** CI builds the APK, captures fresh screenshots, renders the marketing images and attaches everything to a GitHub Release.
+Requires Node 22, Java 17 and Android build tools. Minimum supported Android version is 9 (API 28).
+
+Or skip the toolchain entirely: **Actions → “Publish Framewave APK” → Run workflow.** CI builds and verifies the Android APK, checks the app ID/signature/alignment, creates a SHA-256 manifest, and publishes the APK with its license notices on GitHub Releases.
 
 ---
 
@@ -145,11 +156,13 @@ Or skip the toolchain entirely: **Actions → “Publish Framewave APK & Screens
 src/                  Rust core  (catalogue, search, library, rendering) → WASM
 public/               Hand-written UI: app.js, player.js, sources.js, downloads.js, CSS
 templates/            Pre-rendered shell (SEO-friendly, no client-side router flash)
-android/              Kotlin app: Splash → Main → Detail → Player (Media3 ExoPlayer)
+android-app/          Vega-derived React Native app: Expo, provider sandbox, playback, downloads and cast
 scripts/              build.py · serve.py · screenshots.mjs · make_marketing.py · make_qr.py
 docs/                 Screenshots, marketing assets, audit & performance reports
 .github/workflows/    CI: Pages deploy · APK build · release publisher
 ```
+
+The web app remains independent from the Android codebase. The Android provider is preconfigured for Zenda-Cross and filters the upstream manifest to its VMovies extension. See `docs/VEGA_ANDROID_MIGRATION.md` for attribution, version pin and license restrictions.
 
 The Rust boundary is deliberately tiny: the UI sends line-based commands (`page`, `hero`, `feed`, `results`, `detail`, `player`, `provider`, `dump`) and receives HTML or state strings back. That keeps the domain logic testable in plain `cargo test` while the DOM layer stays dumb and fast.
 
@@ -159,9 +172,9 @@ The Rust boundary is deliberately tiny: the UI sends line-based commands (`page`
 
 Issues and pull requests are welcome — especially device reports (tell me your phone model and Android version), accessibility fixes and translations.
 
-1. **Star the repo** ⭐ — it genuinely helps a student project get discovered.
+1. **Star the repo** ⭐ — it genuinely helps a student project get discovered. The original web/repository code is [MIT](LICENSE); the Android subtree has its separate noncommercial license.
 2. **Report a bug** → [open an issue](https://github.com/flixybuild-lgtm/ZeeFlix/issues)
-3. **Licence** → code is [MIT](LICENSE); films keep their Creative Commons licences.
+3. **Licence** → original web/repository code and films retain their stated licences. The Vega-derived Android subtree has its own PolyForm Noncommercial license and must not be used commercially without separate permission.
 4. **Read the audit** → [Android app audit](docs/ANDROID_APP_AUDIT.md) · [test & performance report](docs/TEST_AND_PERFORMANCE_REPORT.md) · [domain & deployment notes](docs/DOMAIN_AND_DEPLOYMENT_REPORT.md)
 
 ---

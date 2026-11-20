@@ -1,12 +1,15 @@
-# Framewave 1.2.0
+# Framewave 1.3.0
 
-This update makes Zenda-Cross the only configurable provider in the web and Android apps. Provider setup now asks for a trusted running bridge's HTTPS `manifest.json` endpoint—not a GitHub repository or a standalone media URL. The app does not install extension code.
+This release replaces the Android app engine with a Framewave-branded adaptation of Vega while keeping the Rust/WebAssembly website separate. Android now preconfigures the official Zenda-Cross source and exposes only the VMovies extension; users do not enter a URL or JSON manifest.
 
-- **Zenda-Cross connection help:** clearer setup instructions, HTTPS manifest validation, and CORS / availability troubleshooting for web users.
-- **Adult-result control:** results explicitly marked 18+ or adult are hidden by default; enable them in Settings. Provider labels are not verified, so this is not a parental lock.
-- **More useful settings:** clear playback history or reset local library/preferences and the saved bridge connection.
-- **Player controls:** Android adds direct ten-second back/forward buttons, alongside quality/audio/subtitle selection, speed, fullscreen, picture-in-picture, and resume playback.
-- **New app icon:** custom engraved great white shark artwork with a mint signal motif, applied to web, PWA, and Android launcher icons.
-- **Deployment improvements:** CI preserves a downloadable site artifact when GitHub Pages is not configured and explains why the live URL may still show a GitHub 404.
+- **Android engine:** React Native / Expo, with Vega’s provider sandbox, playback, downloads, watchlist and casting capabilities.
+- **Zenda-Cross setup:** one source, one surfaced extension (VMovies), no end-user source editor. The extension manifest and code are fetched from the Zenda-Cross repository at runtime.
+- **Liquid-glass appearance:** mint accents, the Framewave launcher/splash icon, translucent cards and subtle edge highlights.
+- **Settings carried forward:** explicit 18+ results remain opt-in and are filtered only when the provider labels them; watch progress/history can be cleared in Data Management.
+- **Upgrade note:** the prior Kotlin app's watch history, favorites and settings are not automatically imported to the new MMKV-based app. Record anything important before updating; the legacy data may remain in private app storage but is not shown in Framewave.
+- **Website:** remains a separate Rust/WebAssembly application with its existing bridge requirements.
+- **Compatibility and signing:** Android 9+ (API 28), arm64-v8a and armeabi-v7a. This is a CI-verified, debug-signed sideload build, not a Play Store or production-key release. CI verifies the application ID, APK signature and ZIP alignment and publishes SHA-256 checksums. A later CI run may have a different debug signing key; if Android rejects an in-place update, back up anything important and uninstall the previous APK first (this erases app-local data).
 
-**Install:** Android 7.0+; the release workflow publishes `Framewave-v1.2.0-debug.apk` and the stable `ZeeFlix-latest.apk` alias. This is a debug-signed sideload build, not a Play Store release. Verify against `SHA256SUMS.txt`.
+**License:** the Android source includes Vega code at upstream commit `fb0e51110c1a55e138628828c58236aa20d3b282` under PolyForm Noncommercial 1.0.0, with the upstream `LICENSE` and `NOTICE` retained. This build is for noncommercial use only. Commercial use, ads, monetization or commercial distribution needs separate permission from the licensor.
+
+**Install:** the release workflow publishes `Framewave-v1.3.0-debug.apk` and the stable `ZeeFlix-latest.apk` alias. Verify against `SHA256SUMS.txt`.
